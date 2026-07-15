@@ -1563,38 +1563,56 @@ function lsGet(key, def) {
 const SYNC_URL = 'https://api.npoint.io/060d051b75b568f9fa02';
 let syncing = false;
 
-async function cloudPull() {
+async function cloudPull(silent) {
   try {
     const res = await fetch(SYNC_URL + '?t=' + Date.now());
-    if (!res.ok) return;
+    if (!res.ok) { if(!silent) updateSyncPill('error'); return false; }
     const data = await res.json();
+    // Gabung foto lokal yang sudah ada (foto tidak ikut sync krn ukurannya besar)
+    const localVerif = lsGet('veritas_verifikasi', []);
+    const localFotoMap = {};
+    localVerif.forEach(v => { if (v.fotos && v.fotos.length) localFotoMap[v.id] = v.fotos; });
+
     if (data.persetujuan) localStorage.setItem('veritas_persetujuan', JSON.stringify(data.persetujuan));
-    if (data.verifikasi) localStorage.setItem('veritas_verifikasi', JSON.stringify(data.verifikasi));
+    if (data.verifikasi) {
+      const merged = data.verifikasi.map(v => ({
+        ...v,
+        fotos: localFotoMap[v.id] || v.fotos || []
+      }));
+      localStorage.setItem('veritas_verifikasi', JSON.stringify(merged));
+    }
     if (data.kbli) localStorage.setItem('veritas_kbli', JSON.stringify(data.kbli));
-  } catch(e) { console.warn('Cloud pull gagal, pakai data lokal', e); }
+    return true;
+  } catch(e) { console.warn('Cloud pull gagal, pakai data lokal', e); if(!silent) updateSyncPill('error'); return false; }
 }
 
 async function cloudPush() {
   if (syncing) return;
   syncing = true;
   try {
-    await fetch(SYNC_URL, {
+    // Foto (base64) TIDAK dikirim ke cloud — terlalu besar utk npoint.io & bikin sync gagal.
+    // Foto tetap tersimpan di device tempat verifikasi dibuat.
+    const verifLight = lsGet('veritas_verifikasi', []).map(v => {
+      const { fotos, ...rest } = v;
+      return { ...rest, jumlahFoto: (fotos || []).length };
+    });
+    const res = await fetch(SYNC_URL, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         persetujuan: lsGet('veritas_persetujuan', []),
-        verifikasi: lsGet('veritas_verifikasi', []),
+        verifikasi: verifLight,
         kbli: lsGet('veritas_kbli', [])
       })
     });
-  } catch(e) { console.warn('Cloud push gagal', e); }
+    updateSyncPill(res.ok ? 'ok' : 'error');
+  } catch(e) { console.warn('Cloud push gagal', e); updateSyncPill('error'); }
   syncing = false;
 }
 
 function lsSet(key, val) {
   try {
     localStorage.setItem(key, JSON.stringify(val));
-    updateSyncPill('ok');
     updateStorageInfo();
     cloudPush();
   } catch(e) {
@@ -1602,6 +1620,20 @@ function lsSet(key, val) {
       alert('⚠️ Penyimpanan lokal penuh!\n\nSilakan hapus beberapa foto lama melalui menu Pengaturan → Reset Data Verifikasi, lalu coba lagi.');
     }
   }
+}
+
+// ========== AUTO SYNC BERKALA (biar device lain lihat data baru tanpa login ulang) ==========
+let autoSyncTimer = null;
+function startAutoSync() {
+  if (autoSyncTimer) return;
+  autoSyncTimer = setInterval(async () => {
+    if (document.getElementById('mainApp').style.display === 'none') return;
+    const changed = await cloudPull(true);
+    if (changed) {
+      renderDataTable(); renderVerifTable(); renderKbliTable();
+      refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
+    }
+  }, 10000);
 }
 function getPersetujuan() { return lsGet('veritas_persetujuan', SAMPLE_DATA.map(d => ({...d}))); }
 function setPersetujuan(d) { lsSet('veritas_persetujuan', d); }
@@ -1693,6 +1725,7 @@ async function initSession() {
   initStatusChart();
   initMap();
   updateStorageInfo();
+  startAutoSync();
 }
 
 function setupRole() {
