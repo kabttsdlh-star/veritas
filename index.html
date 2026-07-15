@@ -1560,11 +1560,43 @@ let fotoViewerIdx = 0;
 function lsGet(key, def) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
 }
+const SYNC_URL = 'https://api.npoint.io/060d051b75b568f9fa02';
+let syncing = false;
+
+async function cloudPull() {
+  try {
+    const res = await fetch(SYNC_URL + '?t=' + Date.now());
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.persetujuan) localStorage.setItem('veritas_persetujuan', JSON.stringify(data.persetujuan));
+    if (data.verifikasi) localStorage.setItem('veritas_verifikasi', JSON.stringify(data.verifikasi));
+    if (data.kbli) localStorage.setItem('veritas_kbli', JSON.stringify(data.kbli));
+  } catch(e) { console.warn('Cloud pull gagal, pakai data lokal', e); }
+}
+
+async function cloudPush() {
+  if (syncing) return;
+  syncing = true;
+  try {
+    await fetch(SYNC_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        persetujuan: lsGet('veritas_persetujuan', []),
+        verifikasi: lsGet('veritas_verifikasi', []),
+        kbli: lsGet('veritas_kbli', [])
+      })
+    });
+  } catch(e) { console.warn('Cloud push gagal', e); }
+  syncing = false;
+}
+
 function lsSet(key, val) {
   try {
     localStorage.setItem(key, JSON.stringify(val));
     updateSyncPill('ok');
     updateStorageInfo();
+    cloudPush();
   } catch(e) {
     if(e.name === 'QuotaExceededError') {
       alert('⚠️ Penyimpanan lokal penuh!\n\nSilakan hapus beberapa foto lama melalui menu Pengaturan → Reset Data Verifikasi, lalu coba lagi.');
@@ -1649,7 +1681,8 @@ function doLogout() {
 let chartsInited = false, mapInited = false, laporanChartsInited = false;
 let statusChartInst = null, laporanChartInst = null, jenisChartInst = null;
 
-function initSession() {
+async function initSession() {
+  await cloudPull();
   setupRole();
   document.getElementById('verifTanggal').value = todayISO();
   renderDataTable();
