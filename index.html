@@ -1568,6 +1568,7 @@ function doLogin() {
   if (u === selectedRole && p === r.pass) {
     err.style.display = 'none';
     currentRole = selectedRole;
+    localStorage.setItem('veritas_session', selectedRole);
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'flex';
     initSession();
@@ -1579,6 +1580,7 @@ function doLogin() {
 }
 function doLogout() {
   if (!confirm('Yakin ingin keluar dari VERITAS?')) return;
+  localStorage.removeItem('veritas_session');
   stopCamera();
   fotos = [];
   // Reset chart states
@@ -2513,6 +2515,17 @@ function patchVeritasMap() {
   
   console.log('[VERITAS MAP] ' + loaded + ' marker ditampilkan');
 }
+
+// Pulihkan sesi login kalau ada (biar refresh tidak logout)
+document.addEventListener('DOMContentLoaded', () => {
+  const savedRole = localStorage.getItem('veritas_session');
+  if (savedRole && ROLES[savedRole]) {
+    currentRole = savedRole;
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'flex';
+    initSession();
+  }
+});
 
 // Jalankan saat peta dibuka
 document.addEventListener('DOMContentLoaded', () => {
