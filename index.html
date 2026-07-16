@@ -1049,18 +1049,11 @@ body { background:#F4F7FA!important; }
       <div id="page-persetujuan" class="page">
         <div class="panel">
           <div class="panel-header-row">
-            <span class="panel-title"><i class="fa-solid fa-file-circle-check"></i> Data Persetujuan Lingkungan</span>
-            <div style="display:flex;gap:8px;">
-              <button class="btn-export btn-sm" onclick="exportTableToCSV('dataTable','Data_Persetujuan.csv')"><i class="fa-solid fa-download"></i> Unduh CSV</button>
-              <button class="btn btn-sm btn-danger" onclick="confirmClearAll()"><i class="fa-solid fa-trash"></i> Hapus Semua</button>
-            </div>
+            <span class="panel-title"><i class="fa-solid fa-clipboard-check"></i> Hasil Verifikasi Lapangan</span>
+            <button class="btn-export btn-sm" onclick="exportVerifCSV()"><i class="fa-solid fa-download"></i> Unduh CSV</button>
           </div>
-          <div class="table-wrap">
-            <table id="dataTable">
-              <thead><tr><th>#</th><th>Nama Usaha</th><th>KBLI</th><th>Dokumen</th><th>Kecamatan</th><th>Kewenangan</th><th>Status</th><th>Aksi</th></tr></thead>
-              <tbody id="dataTableBody"></tbody>
-            </table>
-          </div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;"><i class="fa-solid fa-circle-info"></i> Menampilkan seluruh hasil verifikasi lapangan (Lolos / Tidak Lolos) beserta foto dan keterangan dari petugas — diinput lewat menu Verifikasi Lapangan.</div>
+          <div id="hasilVerifList"></div>
         </div>
       </div>
 
@@ -1342,13 +1335,13 @@ const MENU_DEF = [
   { id:'dashboard',     label:'Dashboard',           icon:'fa-house',               grp:'Menu Utama' },
   { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Menu Utama' },
   { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Lapangan' },
-  { id:'persetujuan',   label:'Data Persetujuan',     icon:'fa-file-circle-check',   grp:'Lapangan' },
+  { id:'persetujuan',   label:'Hasil Verifikasi',     icon:'fa-clipboard-check',     grp:'Lapangan' },
   { id:'verifikasi',    label:'Verifikasi Lapangan',  icon:'fa-camera',              grp:'Lapangan' },
   { id:'tentang',       label:'Tentang & SOP',        icon:'fa-circle-info',         grp:'Sistem' },
   { id:'pengaturan',    label:'Pengaturan',            icon:'fa-gear',                grp:'Sistem' },
 ];
 const PAGE_TITLES = {
-  dashboard:'Dashboard Eksekutif', upload:'Upload Data', persetujuan:'Data Persetujuan',
+  dashboard:'Dashboard Eksekutif', upload:'Upload Data', persetujuan:'Hasil Verifikasi Lapangan',
   inventarisasi:'Inventarisasi Lapangan', verifikasi:'Verifikasi Lapangan',
   tentang:'Tentang & SOP VERITAS', pengaturan:'Pengaturan Sistem'
 };
@@ -1439,7 +1432,7 @@ function startAutoSync() {
     if (!mainApp || mainApp.style.display === 'none') return;
     const changed = await cloudPull(true);
     if (changed) {
-      renderDataTable(); renderVerifTable();
+      renderDataTable(); renderVerifTable(); renderHasilVerifikasi();
       refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
     }
   }, 10000);
@@ -1528,6 +1521,7 @@ async function initSession() {
   document.getElementById('verifTanggal').value = todayISO();
   renderDataTable();
   renderVerifTable();
+  renderHasilVerifikasi();
   refreshFotoGrid();
   refreshDashboard();
   initStatusChart();
@@ -1566,6 +1560,7 @@ function showPage(id, el) {
   document.getElementById('sidebar').classList.remove('open');
   if (id === 'verifikasi') { populateVerifSelect(); }
   if (id === 'inventarisasi') { renderInvTable(); }
+  if (id === 'persetujuan') { renderHasilVerifikasi(); }
   if (id === 'dashboard') refreshDashboard();
   updateStorageInfo();
 }
@@ -1858,7 +1853,7 @@ function loadCSV() {
     refreshDashboard();
     if (window._veritasMap) setTimeout(renderMapMarkers, 500);
     alert(total + ' data berhasil dimuat!\n\n✅ NIB Terbit (Prioritas): ' + nibTerbit + '\n⚠️ NIB Belum Lengkap: ' + nibBelum);
-    showPage('persetujuan', null);
+    showPage('inventarisasi', null);
   };
   reader.readAsText(file, 'UTF-8');
 }
@@ -1875,8 +1870,9 @@ function saveManualData() {
   setPersetujuan(data);
   clearManualForm();
   renderDataTable();
+  refreshDashboard();
   alert('✓ Data berhasil disimpan!');
-  showPage('persetujuan', null);
+  showPage('inventarisasi', null);
 }
 function clearManualForm() {
   ['m_nama','m_pj','m_alamat','m_hp','m_email','m_kbli'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -2078,6 +2074,7 @@ function saveVerifikasi() {
 
   fotos = [];
   renderVerifTable();
+  renderHasilVerifikasi();
   renderDataTable();
   clearVerifForm();
   refreshFotoGrid();
@@ -2092,6 +2089,36 @@ function clearVerifForm() {
   const tv = document.getElementById('verifTanggal'); if (tv) tv.value = todayISO();
   fotos = [];
   refreshFotoGrid();
+}
+
+// ========== HASIL VERIFIKASI (kartu, lengkap dengan foto) ==========
+function renderHasilVerifikasi() {
+  const list = document.getElementById('hasilVerifList'); if (!list) return;
+  const verifs = getVerifikasi();
+  if (!verifs.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;"><i class="fa-solid fa-clipboard-check" style="font-size:28px;opacity:.4;display:block;margin-bottom:10px;"></i>Belum ada hasil verifikasi lapangan.<br>Input lewat menu Verifikasi Lapangan.</div>';
+    return;
+  }
+  const hasilLabel = h => h === 'Memenuhi Syarat' ? '✅ Lolos - Terverifikasi' : '⚠️ Tidak Lolos - Ketidaksesuaian KBLI';
+  const bh = h => h === 'Memenuhi Syarat' ? 'badge-success' : 'badge-danger';
+  list.innerHTML = verifs.map(v => {
+    const fotoHtml = (v.fotos && v.fotos.length)
+      ? `<div class="foto-grid" style="margin-top:10px;">` + v.fotos.map(f =>
+          `<img src="${f.dataUrl}" alt="Foto lapangan" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #E3ECF3;" onclick="showVerifFotos(${v.id})">`
+        ).join('') + `</div>`
+      : `<div style="font-size:12px;color:var(--muted);margin-top:8px;"><i class="fa-solid fa-image"></i> Tidak ada foto lampiran</div>`;
+    return `<div style="border:1px solid #E3ECF3;border-radius:12px;padding:16px;margin-bottom:14px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1B3F72;">${esc(v.nama)}</div>
+          <div style="font-size:12px;color:#6B8FA8;margin-top:2px;">${esc(v.kec||'—')} &middot; Petugas: ${esc(v.petugas)} &middot; ${esc(v.tgl)}</div>
+        </div>
+        <span class="badge ${bh(v.hasil)}" style="white-space:nowrap;">${hasilLabel(v.hasil)}</span>
+      </div>
+      ${fotoHtml}
+      <div style="margin-top:10px;font-size:12.5px;color:#3A5068;background:#F4F8FB;padding:9px 12px;border-radius:8px;"><strong>Keterangan:</strong> ${esc(v.catatan || '—')}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderVerifTable() {
@@ -2253,7 +2280,7 @@ function confirmClearAll() {
   localStorage.removeItem('veritas_verifikasi');
   localStorage.removeItem('veritas_kbli');
   fotos = [];
-  renderDataTable(); renderVerifTable();
+  renderDataTable(); renderVerifTable(); renderHasilVerifikasi();
   refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
   cloudPush();
   alert('✓ Semua data telah dihapus (termasuk di cloud, jadi tidak akan muncul lagi di device lain).');
@@ -2261,7 +2288,7 @@ function confirmClearAll() {
 function resetVerifikasi() {
   if (!confirm('Hapus semua data verifikasi? Data persetujuan tidak terpengaruh.')) return;
   localStorage.removeItem('veritas_verifikasi');
-  renderVerifTable(); updateStorageInfo();
+  renderVerifTable(); renderHasilVerifikasi(); updateStorageInfo();
   cloudPush();
   alert('✓ Data verifikasi dihapus (termasuk di cloud, jadi tidak akan muncul lagi di device lain).');
 }
