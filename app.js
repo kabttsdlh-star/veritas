@@ -1145,10 +1145,8 @@ body { background:#F4F7FA!important; }
               <label>Hasil Verifikasi *</label>
               <select id="verifHasil">
                 <option value="">-- Pilih --</option>
-                <option>Memenuhi Syarat</option>
-                <option>Belum Memenuhi Syarat</option>
-                <option>Perlu Tindak Lanjut</option>
-                <option>Ketidaksesuaian KBLI</option>
+                <option value="Memenuhi Syarat">✅ Lolos - Terverifikasi</option>
+                <option value="Ketidaksesuaian KBLI">⚠️ Tidak Lolos - Ketidaksesuaian KBLI</option>
               </select>
             </div>
             <div class="form-group full">
@@ -1243,126 +1241,6 @@ body { background:#F4F7FA!important; }
       </div>
 
       
-      <!-- ===== EVALUASI PENGGUNAAN ===== -->
-      <div id="page-evaluasi" class="page">
-        <div class="panel" style="margin-bottom:16px;">
-          <div class="panel-header-row">
-            <span class="panel-title"><i class="fa-solid fa-chart-line"></i> Evaluasi Penggunaan VERITAS</span>
-            <button class="btn-export btn-sm" onclick="exportEvaluasi()"><i class="fa-solid fa-download"></i> Unduh Laporan</button>
-          </div>
-          <!-- Kartu Ringkasan Evaluasi -->
-          <div class="dash-grid" style="margin-bottom:16px;">
-            <div class="stat-card blue">
-              <div class="stat-info">
-                <div class="stat-label">TOTAL DATA DIINPUT</div>
-                <div class="stat-number" id="ev-total">0</div>
-                <div class="stat-desc">dari OSS & Amdalnet</div>
-              </div>
-              <i class="fa-solid fa-database stat-icon"></i>
-            </div>
-            <div class="stat-card green">
-              <div class="stat-info">
-                <div class="stat-label">SUDAH DIVERIFIKASI</div>
-                <div class="stat-number" id="ev-ver">0</div>
-                <div class="stat-desc">kondisi lapangan sesuai</div>
-              </div>
-              <i class="fa-solid fa-circle-check stat-icon"></i>
-            </div>
-            <div class="stat-card orange">
-              <div class="stat-info">
-                <div class="stat-label">BELUM DIVERIFIKASI</div>
-                <div class="stat-number" id="ev-belum">0</div>
-                <div class="stat-desc">menunggu petugas lapangan</div>
-              </div>
-              <i class="fa-solid fa-clock stat-icon"></i>
-            </div>
-            <div class="stat-card red">
-              <div class="stat-info">
-                <div class="stat-label">TEMUAN KBLI</div>
-                <div class="stat-number" id="ev-kbli">0</div>
-                <div class="stat-desc">perlu tindaklanjut</div>
-              </div>
-              <i class="fa-solid fa-triangle-exclamation stat-icon"></i>
-            </div>
-          </div>
-
-          <!-- Progress Bar Capaian -->
-          <div style="background:#F4F7FA;border-radius:12px;padding:16px;margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <span style="font-size:13px;font-weight:600;color:#1B3F72;">Progress Verifikasi Lapangan</span>
-              <span id="ev-pct" style="font-size:20px;font-weight:900;color:#1B3F72;">0%</span>
-            </div>
-            <div style="height:12px;background:#D6E0EC;border-radius:6px;overflow:hidden;">
-              <div id="ev-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#1B3F72,#28C76F);border-radius:6px;transition:width .5s;"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#6B8FA8;">
-              <span>0</span>
-              <span id="ev-bar-label">dari 0 usaha terverifikasi</span>
-              <span id="ev-bar-total">0</span>
-            </div>
-          </div>
-
-          <!-- NIB Terbit vs Belum -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-            <div style="background:#E8F5E9;border-radius:10px;padding:14px;border:1px solid #A5D6A7;">
-              <div style="font-size:11px;font-weight:700;color:#2E7D32;margin-bottom:4px;">✅ NIB TERBIT (PRIORITAS)</div>
-              <div id="ev-nib-terbit" style="font-size:28px;font-weight:900;color:#1A9E55;">0</div>
-              <div style="font-size:11px;color:#2E7D32;">usaha terdaftar OSS/Amdalnet</div>
-            </div>
-            <div style="background:#FFF8E1;border-radius:10px;padding:14px;border:1px solid #FFE082;">
-              <div style="font-size:11px;font-weight:700;color:#E65100;margin-bottom:4px;">⚠️ NIB BELUM LENGKAP</div>
-              <div id="ev-nib-belum" style="font-size:28px;font-weight:900;color:#D97706;">0</div>
-              <div style="font-size:11px;color:#E65100;">perlu perbaikan data</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dash-grid">
-          <!-- Grafik Capaian per Kecamatan -->
-          <div class="panel">
-            <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Capaian Verifikasi per Kecamatan</div>
-            <canvas id="evKecChart" style="max-height:260px;"></canvas>
-          </div>
-
-          <!-- Grafik Status -->
-          <div class="panel">
-            <div class="panel-title"><i class="fa-solid fa-chart-pie"></i> Distribusi Status Usaha</div>
-            <canvas id="evStatusChart" style="max-height:260px;"></canvas>
-          </div>
-        </div>
-
-        <!-- Tabel Kecamatan Detail -->
-        <div class="panel" style="margin-top:16px;">
-          <div class="panel-title"><i class="fa-solid fa-table"></i> Detail Evaluasi per Kecamatan</div>
-          <div style="overflow-x:auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Kecamatan</th>
-                  <th style="text-align:center">Total</th>
-                  <th style="text-align:center">NIB Terbit</th>
-                  <th style="text-align:center">Terverifikasi</th>
-                  <th style="text-align:center">Temuan KBLI</th>
-                  <th style="text-align:center">Belum</th>
-                  <th style="text-align:center">Progress</th>
-                </tr>
-              </thead>
-              <tbody id="evKecBody">
-                <tr><td colspan="7" style="text-align:center;padding:24px;color:#6B8FA8;">Belum ada data. Upload CSV terlebih dahulu.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Kesimpulan & Rekomendasi -->
-        <div class="panel" style="margin-top:16px;">
-          <div class="panel-title"><i class="fa-solid fa-lightbulb"></i> Kesimpulan & Rekomendasi</div>
-          <div id="ev-kesimpulan" style="font-size:13px;line-height:1.8;color:#4A6070;padding:8px 0;">
-            <p>Upload data terlebih dahulu untuk melihat kesimpulan evaluasi.</p>
-          </div>
-        </div>
-      </div>
-
       <!-- ===== ROADMAP ===== -->
       <div id="page-roadmap" class="page">
         <div class="panel">
@@ -1524,11 +1402,11 @@ const SAMPLE_KBLI = [];
 // ========== ROLES ==========
 const ROLES = {
   pimpinan:{ label:'Pimpinan / Kepala Dinas', pass:'dlh2025', icon:'fa-crown',
-    menus:['dashboard','persetujuan','inventarisasi','kbli','laporan','evaluasi','roadmap','tentang'] },
+    menus:['dashboard','persetujuan','inventarisasi','kbli','laporan','roadmap','tentang'] },
   admin:{ label:'Administrator', pass:'veritas123', icon:'fa-user-shield',
-    menus:['dashboard','upload','persetujuan','inventarisasi','verifikasi','kbli','laporan','evaluasi','roadmap','tentang','pengaturan'] },
+    menus:['dashboard','upload','persetujuan','inventarisasi','verifikasi','kbli','laporan','roadmap','tentang','pengaturan'] },
   petugas:{ label:'Petugas DLH', pass:'petugas123', icon:'fa-user-tie',
-    menus:['dashboard','persetujuan','inventarisasi','verifikasi','evaluasi','tentang'] },
+    menus:['dashboard','persetujuan','inventarisasi','verifikasi','tentang'] },
 };
 const MENU_DEF = [
   { id:'dashboard',     label:'Dashboard',           icon:'fa-house',               grp:'Menu Utama' },
@@ -1541,7 +1419,6 @@ const MENU_DEF = [
   { id:'roadmap',       label:'Roadmap',              icon:'fa-road',                grp:'Sistem' },
   { id:'tentang',       label:'Tentang & SOP',        icon:'fa-circle-info',         grp:'Sistem' },
   { id:'pengaturan',    label:'Pengaturan',            icon:'fa-gear',                grp:'Sistem' },
-  { id:'evaluasi',      label:'Evaluasi Penggunaan',   icon:'fa-chart-line',          grp:'Analisis' },
 ];
 const PAGE_TITLES = {
   dashboard:'Dashboard Eksekutif', upload:'Upload Data', persetujuan:'Data Persetujuan',
@@ -1568,7 +1445,6 @@ async function cloudPull(silent) {
     const res = await fetch(SYNC_URL + '?t=' + Date.now());
     if (!res.ok) { if(!silent) updateSyncPill('error'); return false; }
     const data = await res.json();
-    // Gabung foto lokal yang sudah ada (foto tidak ikut sync krn ukurannya besar)
     const localVerif = lsGet('veritas_verifikasi', []);
     const localFotoMap = {};
     localVerif.forEach(v => { if (v.fotos && v.fotos.length) localFotoMap[v.id] = v.fotos; });
@@ -1590,8 +1466,6 @@ async function cloudPush() {
   if (syncing) return;
   syncing = true;
   try {
-    // Foto (base64) TIDAK dikirim ke cloud — terlalu besar utk npoint.io & bikin sync gagal.
-    // Foto tetap tersimpan di device tempat verifikasi dibuat.
     const verifLight = lsGet('veritas_verifikasi', []).map(v => {
       const { fotos, ...rest } = v;
       return { ...rest, jumlahFoto: (fotos || []).length };
@@ -1616,18 +1490,27 @@ function lsSet(key, val) {
     updateStorageInfo();
     cloudPush();
   } catch(e) {
-    if(e.name === 'QuotaExceededError') {
-      alert('⚠️ Penyimpanan lokal penuh!\n\nSilakan hapus beberapa foto lama melalui menu Pengaturan → Reset Data Verifikasi, lalu coba lagi.');
+    if (e.name === 'QuotaExceededError' && key === 'veritas_verifikasi' && Array.isArray(val)) {
+      // Jangan sampai data verifikasi hilang total — simpan dulu tanpa foto
+      try {
+        const stripped = val.map(v => (v.fotos && v.fotos.length) ? { ...v, fotos: [] } : v);
+        localStorage.setItem(key, JSON.stringify(stripped));
+        alert('⚠️ Penyimpanan penuh! Data verifikasi TETAP TERSIMPAN, tapi foto tidak ikut tersimpan karena kapasitas localStorage sudah penuh.\n\nBuka menu Pengaturan → Reset Data Verifikasi Lama untuk menghapus foto lama agar foto baru bisa tersimpan lagi.');
+        updateStorageInfo();
+        cloudPush();
+        return;
+      } catch(e2) { /* jatuh ke alert umum di bawah */ }
     }
+    alert('⚠️ Penyimpanan lokal penuh!\n\nSilakan hapus beberapa foto lama melalui menu Pengaturan → Reset Data Verifikasi, lalu coba lagi.');
   }
 }
 
-// ========== AUTO SYNC BERKALA (biar device lain lihat data baru tanpa login ulang) ==========
 let autoSyncTimer = null;
 function startAutoSync() {
   if (autoSyncTimer) return;
   autoSyncTimer = setInterval(async () => {
-    if (document.getElementById('mainApp').style.display === 'none') return;
+    const mainApp = document.getElementById('mainApp');
+    if (!mainApp || mainApp.style.display === 'none') return;
     const changed = await cloudPull(true);
     if (changed) {
       renderDataTable(); renderVerifTable(); renderKbliTable();
@@ -1759,7 +1642,6 @@ function showPage(id, el) {
   if (id === 'verifikasi') { populateVerifSelect(); }
   if (id === 'inventarisasi') { renderInvTable(); }
   if (id === 'laporan') initLaporanCharts();
-  if (id === 'evaluasi') initEvaluasi();
   if (id === 'dashboard') refreshDashboard();
   if (id === 'kbli') renderKbliTable();
   updateStorageInfo();
@@ -2242,8 +2124,7 @@ function saveVerifikasi() {
   const tgl = document.getElementById('verifTanggal').value || todayISO();
 
   if (hasil === 'Memenuhi Syarat') usaha.status = 'Terverifikasi';
-  else if (hasil === 'Ketidaksesuaian KBLI') usaha.status = 'Ketidaksesuaian KBLI';
-  else usaha.status = 'Inventarisasi';
+  else usaha.status = 'Ketidaksesuaian KBLI';
   usaha.tglVerif = tgl;
   setPersetujuan(data);
 
@@ -2293,7 +2174,8 @@ function renderVerifTable() {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Belum ada riwayat verifikasi lapangan.</td></tr>';
     return;
   }
-  const bh = h => h === 'Memenuhi Syarat' ? 'badge-success' : (h === 'Belum Memenuhi Syarat' || h === 'Ketidaksesuaian KBLI') ? 'badge-danger' : 'badge-warning';
+  const hasilLabel = h => h === 'Memenuhi Syarat' ? '✅ Lolos - Terverifikasi' : '⚠️ Tidak Lolos - Ketidaksesuaian KBLI';
+  const bh = h => h === 'Memenuhi Syarat' ? 'badge-success' : 'badge-danger';
   const bk = k => k === 'Sesuai' ? 'badge-success' : k === 'Tidak Sesuai' ? 'badge-danger' : 'badge-warning';
   tbody.innerHTML = verifs.map(v => {
     const fc = v.fotos ? v.fotos.length : 0;
@@ -2302,7 +2184,7 @@ function renderVerifTable() {
     return `<tr>
       <td style="font-weight:600;">${esc(v.nama)}</td>
       <td>${esc(v.petugas)}</td><td>${esc(v.tgl)}</td>
-      <td><span class="badge ${bh(v.hasil)}">${esc(v.hasil)}</span></td>
+      <td><span class="badge ${bh(v.hasil)}">${hasilLabel(v.hasil)}</span></td>
       <td><span class="badge ${bk(v.kbliMatch)}">${esc(v.kbliMatch)}</span></td>
       <td>${fb}</td>
       <td style="max-width:160px;font-size:11.5px;color:var(--muted);">${esc(cat.length > 55 ? cat.slice(0, 55) + '...' : cat)}</td>
@@ -2645,181 +2527,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
-// ========== EVALUASI PENGGUNAAN ==========
-let evChartKec = null, evChartStatus = null;
-
-function initEvaluasi() {
-  const data = getPersetujuan();
-  const total = data.length;
-  const ver = data.filter(d => d.status === 'Terverifikasi').length;
-  const kbli = data.filter(d => d.status === 'Ketidaksesuaian KBLI').length;
-  const belum = data.filter(d => d.status === 'Belum Inventarisasi').length;
-  const nibTerbit = data.filter(d => d.nib && String(d.nib).replace(/\D/g,'').length >= 8).length;
-  const nibBelum = total - nibTerbit;
-  const pct = total > 0 ? Math.round(ver / total * 100) : 0;
-
-  // Update kartu
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('ev-total', total);
-  set('ev-ver', ver);
-  set('ev-belum', total - ver);
-  set('ev-kbli', kbli);
-  set('ev-pct', pct + '%');
-  set('ev-nib-terbit', nibTerbit);
-  set('ev-nib-belum', nibBelum);
-  set('ev-bar-label', `dari ${total} usaha terverifikasi`);
-  set('ev-bar-total', total);
-  const bar = document.getElementById('ev-bar');
-  if (bar) setTimeout(() => bar.style.width = pct + '%', 100);
-
-  // Hitung per kecamatan
-  const kecData = {};
-  data.forEach(d => {
-    const kec = d.kec || 'Tidak Diketahui';
-    if (!kecData[kec]) kecData[kec] = { total:0, nib:0, ver:0, kbli:0, belum:0 };
-    kecData[kec].total++;
-    if (d.nib && String(d.nib).replace(/\D/g,'').length >= 8) kecData[kec].nib++;
-    if (d.status === 'Terverifikasi') kecData[kec].ver++;
-    else if (d.status === 'Ketidaksesuaian KBLI') kecData[kec].kbli++;
-    else kecData[kec].belum++;
-  });
-
-  const kecList = Object.entries(kecData).sort((a,b) => b[1].total - a[1].total);
-
-  // Tabel kecamatan
-  const tbody = document.getElementById('evKecBody');
-  if (tbody) {
-    tbody.innerHTML = kecList.length ? kecList.map(([kec, d]) => {
-      const pctKec = d.total > 0 ? Math.round(d.ver / d.total * 100) : 0;
-      const barColor = pctKec >= 80 ? '#28C76F' : pctKec >= 50 ? '#FF9F43' : '#EA5455';
-      return `<tr>
-        <td><strong>${esc(kec)}</strong></td>
-        <td style="text-align:center;font-weight:700">${d.total}</td>
-        <td style="text-align:center"><span class="badge badge-success">${d.nib}</span></td>
-        <td style="text-align:center"><span class="badge badge-success">${d.ver}</span></td>
-        <td style="text-align:center"><span class="badge ${d.kbli > 0 ? 'badge-danger' : 'badge-info'}">${d.kbli}</span></td>
-        <td style="text-align:center"><span class="badge badge-info">${d.belum}</span></td>
-        <td style="text-align:center;min-width:100px">
-          <div style="height:6px;background:#E4EDF5;border-radius:3px;overflow:hidden;margin-bottom:2px">
-            <div style="height:100%;width:${pctKec}%;background:${barColor};border-radius:3px"></div>
-          </div>
-          <span style="font-size:10px;color:#6B8FA8">${pctKec}%</span>
-        </td>
-      </tr>`;
-    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:24px;color:#6B8FA8;">Belum ada data.</td></tr>';
-  }
-
-  // Chart kecamatan
-  const kecLabels = kecList.slice(0, 12).map(([k]) => k);
-  const kecVals = kecList.slice(0, 12).map(([,d]) => d.total);
-  const kecVerVals = kecList.slice(0, 12).map(([,d]) => d.ver);
-  const ctxKec = document.getElementById('evKecChart');
-  if (ctxKec) {
-    if (evChartKec) evChartKec.destroy();
-    evChartKec = new Chart(ctxKec, {
-      type: 'bar',
-      data: {
-        labels: kecLabels.length ? kecLabels : ['Belum ada data'],
-        datasets: [
-          { label: 'Total', data: kecVals.length ? kecVals : [0], backgroundColor: '#EBF3FC', borderRadius: 4 },
-          { label: 'Terverifikasi', data: kecVerVals.length ? kecVerVals : [0], backgroundColor: '#28C76F', borderRadius: 4 },
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
-        scales: {
-          y: { beginAtZero: true, ticks: { color: '#7A93A8', stepSize: 1 }, grid: { color: '#EEF2F7' } },
-          x: { ticks: { color: '#7A93A8', maxRotation: 45, font: { size: 10 } }, grid: { display: false } }
-        }
-      }
-    });
-  }
-
-  // Chart status donut
-  const ctxStatus = document.getElementById('evStatusChart');
-  if (ctxStatus) {
-    if (evChartStatus) evChartStatus.destroy();
-    evChartStatus = new Chart(ctxStatus, {
-      type: 'doughnut',
-      data: {
-        labels: ['Terverifikasi', 'Inventarisasi', 'Temuan KBLI', 'Belum Inventarisasi'],
-        datasets: [{
-          data: [ver, data.filter(d => d.status==='Inventarisasi').length, kbli, belum],
-          backgroundColor: ['#28C76F','#FF9F43','#EA5455','#8FD9FB'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } }
-        },
-        cutout: '55%'
-      }
-    });
-  }
-
-  // Kesimpulan otomatis
-  const elKes = document.getElementById('ev-kesimpulan');
-  if (elKes && total > 0) {
-    let kes = `<p>📊 <strong>Total ${total} usaha</strong> telah diinput ke sistem VERITAS dari sumber OSS dan Amdalnet.</p>`;
-    kes += `<p>✅ <strong>${nibTerbit} usaha (${Math.round(nibTerbit/total*100)}%)</strong> telah memiliki NIB terbit dan menjadi prioritas verifikasi lapangan.</p>`;
-    if (ver > 0) kes += `<p>🎯 <strong>${ver} usaha (${pct}%)</strong> telah berhasil diverifikasi lapangan oleh petugas DLH.</p>`;
-    if (kbli > 0) kes += `<p>⚠️ <strong>${kbli} usaha</strong> ditemukan ketidaksesuaian KBLI dan memerlukan tindaklanjut koordinasi dengan DPMPTSP.</p>`;
-    if (belum > 0) kes += `<p>📋 <strong>${belum} usaha</strong> masih menunggu verifikasi lapangan.</p>`;
-    
-    // Rekomendasi
-    kes += `<hr style="margin:12px 0;border:none;border-top:1px solid #E4EDF5;">`;
-    kes += `<p><strong>🔹 Rekomendasi:</strong></p>`;
-    if (pct < 50) kes += `<p>• Percepat verifikasi lapangan, terutama untuk ${nibTerbit} usaha yang sudah memiliki NIB.</p>`;
-    if (kbli > 0) kes += `<p>• Segera koordinasikan ${kbli} temuan KBLI dengan DPMPTSP untuk koreksi data di OSS-RBA.</p>`;
-    if (nibBelum > 0) kes += `<p>• Fasilitasi ${nibBelum} usaha yang NIB-nya belum lengkap untuk pengurusan melalui OSS.</p>`;
-    kes += `<p>• Lanjutkan penggunaan VERITAS sebagai alat bantu verifikasi persetujuan lingkungan DLH Kab. TTS.</p>`;
-    
-    elKes.innerHTML = kes;
-  }
-}
-
-function exportEvaluasi() {
-  const data = getPersetujuan();
-  const kecData = {};
-  data.forEach(d => {
-    const kec = d.kec || '—';
-    if (!kecData[kec]) kecData[kec] = { total:0, nib:0, ver:0, kbli:0, belum:0 };
-    kecData[kec].total++;
-    if (d.nib && String(d.nib).replace(/\D/g,'').length >= 8) kecData[kec].nib++;
-    if (d.status === 'Terverifikasi') kecData[kec].ver++;
-    else if (d.status === 'Ketidaksesuaian KBLI') kecData[kec].kbli++;
-    else kecData[kec].belum++;
-  });
-  
-  const rows = [
-    ['LAPORAN EVALUASI PENGGUNAAN VERITAS — DLH KAB. TTS'],
-    ['Tanggal', new Date().toLocaleDateString('id-ID')],
-    [''],
-    ['RINGKASAN UMUM'],
-    ['Total Usaha', data.length],
-    ['NIB Terbit', data.filter(d => d.nib && String(d.nib).replace(/\D/g,'').length >= 8).length],
-    ['Terverifikasi', data.filter(d => d.status==='Terverifikasi').length],
-    ['Temuan KBLI', data.filter(d => d.status==='Ketidaksesuaian KBLI').length],
-    ['Belum Diverifikasi', data.filter(d => d.status==='Belum Inventarisasi').length],
-    [''],
-    ['DETAIL PER KECAMATAN'],
-    ['Kecamatan','Total','NIB Terbit','Terverifikasi','Temuan KBLI','Belum','% Progress'],
-    ...Object.entries(kecData).sort((a,b)=>b[1].total-a[1].total).map(([kec,d]) => [
-      kec, d.total, d.nib, d.ver, d.kbli, d.belum,
-      d.total > 0 ? Math.round(d.ver/d.total*100)+'%' : '0%'
-    ])
-  ];
-  
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
-  a.download = 'Evaluasi_VERITAS_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-}
 
 </script>
 </body>
