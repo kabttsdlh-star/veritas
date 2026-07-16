@@ -1120,6 +1120,29 @@ body { background:#F4F7FA!important; }
               </select>
             </div>
             <div class="form-group">
+              <label>Jenis Bangunan</label>
+              <select id="verifBangunan">
+                <option value="">-- Pilih --</option>
+                <option>Permanen</option>
+                <option>Semi Permanen</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>RTH yang Tersedia</label>
+              <select id="verifRTH">
+                <option value="">-- Pilih --</option>
+                <option>Ada</option>
+                <option>Tidak Ada</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Titik Koordinat</label>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="verifKoordinat" placeholder="Contoh: -9.859, 124.284" style="flex:1;">
+                <button type="button" class="btn-outline btn-sm" onclick="ambilLokasi()" style="white-space:nowrap;padding:0 12px;"><i class="fa-solid fa-location-crosshairs"></i> Ambil</button>
+              </div>
+            </div>
+            <div class="form-group">
               <label>Hasil Verifikasi *</label>
               <select id="verifHasil">
                 <option value="">-- Pilih --</option>
@@ -1995,6 +2018,16 @@ function populateVerifSelect() {
     }).join('');
 }
 
+function ambilLokasi() {
+  const inp = document.getElementById('verifKoordinat');
+  if (!navigator.geolocation) { alert('Perangkat/browser tidak mendukung deteksi lokasi.'); return; }
+  if (inp) inp.placeholder = 'Mendeteksi lokasi...';
+  navigator.geolocation.getCurrentPosition(
+    pos => { if (inp) inp.value = pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6); },
+    err => { alert('Gagal mengambil lokasi: ' + err.message + '\n\nPastikan izin lokasi diaktifkan, atau isi koordinat manual.'); if (inp) inp.placeholder = 'Contoh: -9.859, 124.284'; },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
 function saveVerifikasi() {
   const idxVal = document.getElementById('verifUsaha').value;
   const petugas = document.getElementById('verifPetugas').value.trim();
@@ -2019,6 +2052,9 @@ function saveVerifikasi() {
     aktif: document.getElementById('verifAktif').value || '—',
     kbliMatch: document.getElementById('verifKBLI').value || '—',
     dokumen: document.getElementById('verifDokumen').value || '—',
+    bangunan: document.getElementById('verifBangunan').value || '—',
+    rth: document.getElementById('verifRTH').value || '—',
+    koordinat: document.getElementById('verifKoordinat').value.trim() || '—',
     hasil,
     catatan: document.getElementById('verifCatatan').value || '',
     fotos: fotos.map(f => ({ dataUrl: f.dataUrl, name: f.name, time: f.time }))
@@ -2045,8 +2081,8 @@ function saveVerifikasi() {
 }
 
 function clearVerifForm() {
-  ['verifUsaha','verifAktif','verifKBLI','verifDokumen','verifHasil'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  ['verifPetugas','verifCatatan'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['verifUsaha','verifAktif','verifKBLI','verifDokumen','verifBangunan','verifRTH','verifHasil'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['verifPetugas','verifCatatan','verifKoordinat'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const tv = document.getElementById('verifTanggal'); if (tv) tv.value = todayISO();
   fotos = [];
   refreshFotoGrid();
@@ -2077,6 +2113,11 @@ function renderHasilVerifikasi() {
         <span class="badge ${bh(v.hasil)}" style="white-space:nowrap;">${hasilLabel(v.hasil)}</span>
       </div>
       ${fotoHtml}
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;font-size:11px;">
+        <span class="badge" style="background:#EEF3F8;color:#1B3F72;">🏗️ Bangunan: ${esc(v.bangunan || '—')}</span>
+        <span class="badge" style="background:#EEF3F8;color:#1B3F72;">🌳 RTH: ${esc(v.rth || '—')}</span>
+        ${v.koordinat && v.koordinat !== '—' ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(v.koordinat)}" target="_blank" rel="noopener" class="badge" style="background:#EEF3F8;color:#1B3F72;text-decoration:none;">📍 ${esc(v.koordinat)}</a>` : `<span class="badge" style="background:#EEF3F8;color:#1B3F72;">📍 Koordinat: —</span>`}
+      </div>
       <div style="margin-top:10px;font-size:12.5px;color:#3A5068;background:#F4F8FB;padding:9px 12px;border-radius:8px;"><strong>Keterangan:</strong> ${esc(v.catatan || '—')}</div>
     </div>`;
   }).join('');
@@ -2268,9 +2309,9 @@ function exportTableToCSV(tableId, filename) {
 function exportVerifCSV() {
   const verifs = getVerifikasi();
   if (!verifs.length) { alert('Belum ada data verifikasi untuk diekspor.'); return; }
-  let csv = '"Nama Usaha","Kecamatan","KBLI","Petugas","Tanggal","Aktif","Kesesuaian KBLI","Dokumen","Hasil","Jumlah Foto","Catatan"\n';
+  let csv = '"Nama Usaha","Kecamatan","KBLI","Petugas","Tanggal","Aktif","Kesesuaian KBLI","Dokumen","Jenis Bangunan","RTH","Titik Koordinat","Hasil","Jumlah Foto","Catatan"\n';
   verifs.forEach(v => {
-    csv += [v.nama,v.kec,v.kbli,v.petugas,v.tgl,v.aktif,v.kbliMatch,v.dokumen,v.hasil,(v.fotos?v.fotos.length:0),v.catatan]
+    csv += [v.nama,v.kec,v.kbli,v.petugas,v.tgl,v.aktif,v.kbliMatch,v.dokumen,v.bangunan,v.rth,v.koordinat,v.hasil,(v.fotos?v.fotos.length:0),v.catatan]
       .map(x => `"${String(x||'').replace(/"/g,'""')}"`).join(',') + '\n';
   });
   downloadCSV(csv, 'Hasil_Verifikasi_' + todayISO() + '.csv');
