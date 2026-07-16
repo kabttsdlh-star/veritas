@@ -873,11 +873,6 @@ body { background:#F4F7FA!important; }
     <div class="lc-input-wrap"><i class="fa-solid fa-lock"></i><input id="password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div id="loginError" class="lc-error"><i class="fa-solid fa-circle-exclamation"></i> Username atau password salah.</div>
     <button class="lc-btn" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Masuk ke VERITAS</button>
-    <div class="lc-hint">
-      👑 <code>pimpinan</code> / <code>dlh2025</code>&nbsp;
-      🛡️ <code>admin</code> / <code>veritas123</code>&nbsp;
-      👷 <code>petugas</code> / <code>petugas123</code>
-    </div>
     <div class="lc-version">VERITAS v3.0 · DLH TTS · 2025</div>
   </div>
 </div>
@@ -1235,6 +1230,35 @@ body { background:#F4F7FA!important; }
 
       <!-- ===== PENGATURAN ===== -->
       <div id="page-pengaturan" class="page">
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title"><i class="fa-solid fa-users-gear"></i> Manajemen Pengguna</div>
+          <div class="alert alert-info" style="margin-bottom:14px;"><i class="fa-solid fa-circle-info"></i> Kredensial login dikelola di sini (tidak lagi ditampilkan di halaman login). Akun bawaan bertanda <i class="fa-solid fa-lock"></i> tidak bisa dihapus, agar sistem tidak pernah terkunci total.</div>
+          <div style="background:var(--bb-bg);border:1px solid var(--bb-border);border-radius:8px;padding:10px 16px;font-size:12.5px;display:inline-block;margin-bottom:14px;">
+            <strong id="petugasCountLabel">0</strong> / <span id="petugasMaxLabel">0</span> akun Petugas terdaftar
+          </div>
+          <div class="table-wrap" style="margin-bottom:18px;">
+            <table>
+              <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Aksi</th></tr></thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+          <div style="background:var(--bb-bg);border:1px solid var(--bb-border);border-radius:var(--r-sm);padding:16px;max-width:560px;">
+            <div style="font-size:13px;font-weight:700;color:var(--bb5);margin-bottom:10px;"><i class="fa-solid fa-user-plus"></i> Tambah Pengguna Baru</div>
+            <div class="form-grid" style="margin-bottom:0;">
+              <div class="form-group"><label>Nama Lengkap</label><input type="text" id="newUserNama" placeholder="Nama lengkap"></div>
+              <div class="form-group"><label>Role</label>
+                <select id="newUserRole">
+                  <option value="petugas">Petugas DLH</option>
+                  <option value="admin">Administrator</option>
+                  <option value="pimpinan">Pimpinan / Kepala Dinas</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Username</label><input type="text" id="newUserUsername" placeholder="tanpa spasi, huruf kecil"></div>
+              <div class="form-group"><label>Password</label><input type="text" id="newUserPassword" placeholder="Minimal 6 karakter"></div>
+            </div>
+            <button class="btn btn-success btn-sm" style="margin-top:12px;" onclick="tambahPengguna()"><i class="fa-solid fa-plus"></i> Tambah Pengguna</button>
+          </div>
+        </div>
         <div class="panel">
           <div class="panel-title"><i class="fa-solid fa-gear"></i> Pengaturan &amp; Manajemen Data</div>
           <div class="alert alert-info" style="margin-bottom:18px;"><i class="fa-solid fa-circle-info"></i> Semua data VERITAS tersimpan di localStorage browser ini. Gunakan dengan hati-hati saat menghapus data karena tidak dapat dipulihkan.</div>
@@ -1243,7 +1267,7 @@ body { background:#F4F7FA!important; }
               <div style="font-size:13px;font-weight:700;color:var(--bb5);margin-bottom:4px;"><i class="fa-solid fa-download" style="margin-right:5px;"></i>Ekspor Semua Data</div>
               <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Unduh data inventarisasi dan verifikasi ke file CSV.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-sm" onclick="exportTableToCSV('dataTable','Data_Persetujuan.csv')"><i class="fa-solid fa-file-csv"></i> Data Persetujuan</button>
+                <button class="btn btn-sm" onclick="exportRegistryCSV()"><i class="fa-solid fa-file-csv"></i> Data Persetujuan</button>
                 <button class="btn btn-sm" onclick="exportVerifCSV()"><i class="fa-solid fa-file-csv"></i> Data Verifikasi</button>
               </div>
             </div>
@@ -1323,13 +1347,14 @@ const SAMPLE_KBLI = [];
 
 // ========== ROLES ==========
 const ROLES = {
-  pimpinan:{ label:'Pimpinan / Kepala Dinas', pass:'dlh2025', icon:'fa-crown',
+  pimpinan:{ label:'Pimpinan / Kepala Dinas', icon:'fa-crown',
     menus:['dashboard','inventarisasi','persetujuan','tentang'] },
-  admin:{ label:'Administrator', pass:'veritas123', icon:'fa-user-shield',
+  admin:{ label:'Administrator', icon:'fa-user-shield',
     menus:['dashboard','inventarisasi','upload','persetujuan','verifikasi','tentang','pengaturan'] },
-  petugas:{ label:'Petugas DLH', pass:'petugas123', icon:'fa-user-tie',
+  petugas:{ label:'Petugas DLH', icon:'fa-user-tie',
     menus:['dashboard','inventarisasi','persetujuan','verifikasi','tentang'] },
 };
+const MAX_PETUGAS = 20; // batas maksimal akun Petugas yang bisa didaftarkan
 const MENU_DEF = [
   { id:'dashboard',     label:'Dashboard',           icon:'fa-house',               grp:'Menu Utama' },
   { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Menu Utama' },
@@ -1376,6 +1401,7 @@ async function cloudPull(silent) {
       localStorage.setItem('veritas_verifikasi', JSON.stringify(merged));
     }
     if (data.kbli) localStorage.setItem('veritas_kbli', JSON.stringify(data.kbli));
+    if (data.users) localStorage.setItem('veritas_users', JSON.stringify(data.users));
     return true;
   } catch(e) { console.warn('Cloud pull gagal, pakai data lokal', e); if(!silent) updateSyncPill('error'); return false; }
 }
@@ -1394,7 +1420,8 @@ async function cloudPush() {
       body: JSON.stringify({
         persetujuan: lsGet('veritas_persetujuan', []),
         verifikasi: verifLight,
-        kbli: lsGet('veritas_kbli', [])
+        kbli: lsGet('veritas_kbli', []),
+        users: getUsers()
       })
     });
     updateSyncPill(res.ok ? 'ok' : 'error');
@@ -1433,9 +1460,26 @@ function startAutoSync() {
     if (changed) {
       renderDataTable(); renderVerifTable(); renderHasilVerifikasi();
       refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
+      renderUsersTable();
+      // Kalau akun yang sedang login ternyata sudah dihapus admin, paksa logout
+      if (currentUser) {
+        const stillExists = getUsers().some(u => u.id === currentUser.id);
+        if (!stillExists) {
+          alert('⚠️ Akun Anda telah dihapus oleh Administrator. Anda akan otomatis keluar.');
+          forceLogout();
+        }
+      }
     }
   }, 10000);
 }
+const DEFAULT_USERS = [
+  { id:'u_pimpinan', nama:'Pimpinan / Kepala Dinas', username:'pimpinan', password:'dlh2025',   role:'pimpinan', builtin:true },
+  { id:'u_admin',    nama:'Administrator Utama',      username:'admin',    password:'veritas123', role:'admin',    builtin:true },
+  { id:'u_petugas',  nama:'Petugas DLH (Default)',     username:'petugas',  password:'petugas123', role:'petugas',  builtin:true },
+];
+function getUsers() { return lsGet('veritas_users', DEFAULT_USERS.map(u => ({...u}))); }
+function setUsers(d) { lsSet('veritas_users', d); }
+
 function getPersetujuan() { return lsGet('veritas_persetujuan', SAMPLE_DATA.map(d => ({...d}))); }
 function setPersetujuan(d) { lsSet('veritas_persetujuan', d); }
 function getVerifikasi() { return lsGet('veritas_verifikasi', []); }
@@ -1478,15 +1522,18 @@ function selectRole(role, el) {
   document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 }
+let currentUser = null;
 function doLogin() {
   const u = document.getElementById('username').value.trim().toLowerCase();
   const p = document.getElementById('password').value;
-  const r = ROLES[selectedRole];
   const err = document.getElementById('loginError');
-  if (u === selectedRole && p === r.pass) {
+  const users = getUsers();
+  const match = users.find(usr => usr.username.toLowerCase() === u && usr.password === p && usr.role === selectedRole);
+  if (match) {
     err.style.display = 'none';
     currentRole = selectedRole;
-    localStorage.setItem('veritas_session', selectedRole);
+    currentUser = match;
+    localStorage.setItem('veritas_session', JSON.stringify({ role: selectedRole, username: match.username }));
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'flex';
     initSession();
@@ -1496,17 +1543,20 @@ function doLogin() {
     document.getElementById('password').focus();
   }
 }
-function doLogout() {
-  if (!confirm('Yakin ingin keluar dari VERITAS?')) return;
+function forceLogout() {
   localStorage.removeItem('veritas_session');
+  currentUser = null;
   stopCamera();
   fotos = [];
-  // Reset chart states
   mapInited = false;
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('username').value = '';
   document.getElementById('password').value = '';
+}
+function doLogout() {
+  if (!confirm('Yakin ingin keluar dari VERITAS?')) return;
+  forceLogout();
 }
 
 // ========== SESSION INIT ==========
@@ -1519,6 +1569,7 @@ async function initSession() {
   renderDataTable();
   renderVerifTable();
   renderHasilVerifikasi();
+  renderUsersTable();
   refreshFotoGrid();
   refreshDashboard();
   initMap();
@@ -1528,9 +1579,10 @@ async function initSession() {
 
 function setupRole() {
   const r = ROLES[currentRole];
-  document.getElementById('userDisplayName').textContent = r.label;
-  document.getElementById('userRoleDisplay').textContent = 'DLH Kabupaten TTS';
-  document.getElementById('sidebarName').textContent = r.label;
+  const displayName = (currentUser && currentUser.nama) ? currentUser.nama : r.label;
+  document.getElementById('userDisplayName').textContent = displayName;
+  document.getElementById('userRoleDisplay').textContent = r.label;
+  document.getElementById('sidebarName').textContent = displayName;
   document.getElementById('userAvatar').innerHTML = `<i class="fa-solid ${r.icon}"></i>`;
   document.getElementById('suAv').innerHTML = `<i class="fa-solid ${r.icon}"></i>`;
   const menu = document.getElementById('sidebarMenu');
@@ -1557,6 +1609,7 @@ function showPage(id, el) {
   if (id === 'verifikasi') { populateVerifSelect(); }
   if (id === 'inventarisasi') { renderInvTable(); }
   if (id === 'persetujuan') { renderHasilVerifikasi(); }
+  if (id === 'pengaturan') { renderUsersTable(); }
   if (id === 'dashboard') refreshDashboard();
   updateStorageInfo();
 }
@@ -2061,7 +2114,77 @@ function clearVerifForm() {
   refreshFotoGrid();
 }
 
-// ========== HASIL VERIFIKASI (kartu, lengkap dengan foto) ==========
+// ========== MANAJEMEN PENGGUNA ==========
+function renderUsersTable() {
+  const tbody = document.getElementById('usersTableBody'); if (!tbody) return;
+  const users = getUsers();
+  const roleLabel = { admin:'Administrator', petugas:'Petugas DLH', pimpinan:'Pimpinan' };
+  const roleBadge = { admin:'badge-warning', petugas:'badge-info', pimpinan:'badge-success' };
+  tbody.innerHTML = users.map(u => {
+    const isSelf = currentUser && u.id === currentUser.id;
+    const canDelete = !u.builtin && !isSelf;
+    const delBtn = canDelete
+      ? `<button class="btn btn-sm btn-danger" onclick="hapusPengguna('${u.id}')"><i class="fa-solid fa-trash"></i></button>`
+      : `<span style="color:var(--muted);font-size:12px;" title="${u.builtin ? 'Akun bawaan sistem' : 'Akun yang sedang login'}"><i class="fa-solid fa-lock"></i></span>`;
+    return `<tr>
+      <td>${esc(u.nama)}${isSelf ? ' <span style="color:var(--muted);font-size:10px;">(Anda)</span>' : ''}</td>
+      <td><code>${esc(u.username)}</code></td>
+      <td><span class="badge ${roleBadge[u.role]||''}">${roleLabel[u.role]||u.role}</span></td>
+      <td>${delBtn}</td>
+    </tr>`;
+  }).join('');
+  const pc = document.getElementById('petugasCountLabel'); if (pc) pc.textContent = users.filter(u => u.role === 'petugas').length;
+  const pm = document.getElementById('petugasMaxLabel'); if (pm) pm.textContent = MAX_PETUGAS;
+}
+
+function tambahPengguna() {
+  const nama = document.getElementById('newUserNama').value.trim();
+  const role = document.getElementById('newUserRole').value;
+  const username = document.getElementById('newUserUsername').value.trim().toLowerCase();
+  const password = document.getElementById('newUserPassword').value;
+
+  if (!nama) { alert('Nama lengkap wajib diisi'); return; }
+  if (!username || /\s/.test(username)) { alert('Username wajib diisi tanpa spasi'); return; }
+  if (!password || password.length < 6) { alert('Password minimal 6 karakter'); return; }
+
+  const users = getUsers();
+  if (users.some(u => u.username.toLowerCase() === username)) { alert('Username sudah dipakai, pilih username lain'); return; }
+  if (role === 'petugas' && users.filter(u => u.role === 'petugas').length >= MAX_PETUGAS) {
+    alert(`Batas maksimal akun Petugas (${MAX_PETUGAS}) sudah tercapai. Hapus akun petugas yang tidak aktif terlebih dahulu.`);
+    return;
+  }
+
+  users.push({ id: 'u_' + Date.now(), nama, username, password, role, builtin: false });
+  setUsers(users);
+  renderUsersTable();
+  ['newUserNama','newUserUsername','newUserPassword'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  alert(`✓ Pengguna "${nama}" berhasil ditambahkan sebagai ${roleLabelOf(role)}. Kredensial ini yang dipakai untuk login.`);
+}
+function roleLabelOf(role) { return role === 'petugas' ? 'Petugas' : role === 'admin' ? 'Admin' : 'Pimpinan'; }
+
+function hapusPengguna(id) {
+  const users = getUsers();
+  const target = users.find(u => u.id === id);
+  if (!target) return;
+  if (target.builtin) { alert('Akun bawaan sistem tidak bisa dihapus.'); return; }
+  if (currentUser && target.id === currentUser.id) { alert('Tidak bisa menghapus akun yang sedang Anda pakai untuk login.'); return; }
+  if (target.role === 'admin' && users.filter(u => u.role === 'admin').length <= 1) { alert('Tidak bisa menghapus — minimal harus ada 1 akun Admin.'); return; }
+  if (!confirm(`Hapus permanen akun "${target.nama}" (${target.username})?\n\nAkun ini tidak akan bisa login lagi di semua device (termasuk yang lain).`)) return;
+  setUsers(users.filter(u => u.id !== id));
+  renderUsersTable();
+  alert('✓ Akun dihapus permanen dari sistem (termasuk di cloud).');
+}
+
+function exportRegistryCSV() {
+  const data = getPersetujuan();
+  if (!data.length) { alert('Belum ada data untuk diekspor.'); return; }
+  let csv = '"Nama Usaha","KBLI","Dokumen","Kecamatan","Kewenangan","NIB","Status"\n';
+  data.forEach(d => {
+    csv += [d.nama,d.kbli,d.dokumen,d.kec,d.kewenangan,d.nib,d.status]
+      .map(x => `"${String(x||'').replace(/"/g,'""')}"`).join(',') + '\n';
+  });
+  downloadCSV(csv, 'Data_Persetujuan_' + todayISO() + '.csv');
+}
 function renderHasilVerifikasi() {
   const list = document.getElementById('hasilVerifList'); if (!list) return;
   const verifs = getVerifikasi();
@@ -2445,9 +2568,16 @@ function patchVeritasMap() {
 
 // Pulihkan sesi login kalau ada (biar refresh tidak logout)
 document.addEventListener('DOMContentLoaded', () => {
-  const savedRole = localStorage.getItem('veritas_session');
-  if (savedRole && ROLES[savedRole]) {
-    currentRole = savedRole;
+  const raw = localStorage.getItem('veritas_session');
+  if (!raw) return;
+  let sess = null;
+  try { sess = JSON.parse(raw); } catch(e) { sess = { role: raw, username: raw }; } // kompatibel dgn sesi versi lama
+  if (sess && ROLES[sess.role]) {
+    const users = getUsers();
+    const match = users.find(u => u.username.toLowerCase() === String(sess.username).toLowerCase() && u.role === sess.role);
+    if (!match) { localStorage.removeItem('veritas_session'); return; } // akun sudah dihapus admin
+    currentRole = sess.role;
+    currentUser = match;
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'flex';
     initSession();
