@@ -1334,8 +1334,8 @@ const MENU_DEF = [
   { id:'dashboard',     label:'Dashboard',           icon:'fa-house',               grp:'Menu Utama' },
   { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Menu Utama' },
   { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Lapangan' },
-  { id:'persetujuan',   label:'Hasil Verifikasi',     icon:'fa-clipboard-check',     grp:'Lapangan' },
   { id:'verifikasi',    label:'Verifikasi Lapangan',  icon:'fa-camera',              grp:'Lapangan' },
+  { id:'persetujuan',   label:'Hasil Verifikasi',     icon:'fa-clipboard-check',     grp:'Lapangan' },
   { id:'tentang',       label:'Tentang & SOP',        icon:'fa-circle-info',         grp:'Sistem' },
   { id:'pengaturan',    label:'Pengaturan',            icon:'fa-gear',                grp:'Sistem' },
 ];
@@ -1609,8 +1609,16 @@ function refreshDashboard() {
 
 function animateCounter(id, target) {
   const el = document.getElementById(id); if (!el) return;
-  let v = 0; const inc = Math.max(1, Math.ceil(target / 40));
-  const t = setInterval(() => { v = Math.min(v + inc, target); el.textContent = v; if (v >= target) clearInterval(t); }, 18);
+  const current = parseInt(el.textContent, 10) || 0;
+  if (current === target) return;
+  let v = current;
+  const diff = target - current;
+  const inc = Math.max(1, Math.ceil(Math.abs(diff) / 40));
+  const t = setInterval(() => {
+    v = diff > 0 ? Math.min(v + inc, target) : Math.max(v - inc, target);
+    el.textContent = v;
+    if (v === target) clearInterval(t);
+  }, 18);
 }
 
 // ========== MAP ==========
