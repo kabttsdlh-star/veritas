@@ -967,18 +967,6 @@ body { background:#F4F7FA!important; }
             </div>
           </div>
         </div>
-        <div class="panel">
-          <div class="panel-header-row">
-            <span class="panel-title"><i class="fa-solid fa-star"></i> Data Prioritas Inventarisasi</span>
-            <button class="btn-export btn-sm" onclick="exportTableToCSV('prioritasTable','Data_Prioritas.csv')"><i class="fa-solid fa-download"></i> CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table id="prioritasTable">
-              <thead><tr><th>Nama Usaha / Kegiatan</th><th>KBLI</th><th>Kecamatan</th><th>Status</th></tr></thead>
-              <tbody id="prioritasBody"></tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
       <!-- ===== UPLOAD DATA ===== -->
@@ -1602,33 +1590,6 @@ function refreshDashboard() {
   const ro = document.getElementById('r-oss'); if (ro) ro.textContent = nibTerbit;
   const ra = document.getElementById('r-amdalnet'); if (ra) ra.textContent = nibBelum;
   
-  // Prioritas table — tampilkan NIB terbit dulu (prioritas verifikasi)
-  const pb = document.getElementById('prioritasBody');
-  if (pb) {
-    // Sort: NIB terbit dulu, lalu belum terverifikasi
-    const sorted = [...data].sort((a,b) => {
-      const aNib = a.nib && String(a.nib).replace(/\D/g,'').length >= 8 ? 0 : 1;
-      const bNib = b.nib && String(b.nib).replace(/\D/g,'').length >= 8 ? 0 : 1;
-      if (aNib !== bNib) return aNib - bNib;
-      // Belum diverifikasi dulu
-      const aVer = a.status === 'Terverifikasi' ? 1 : 0;
-      const bVer = b.status === 'Terverifikasi' ? 1 : 0;
-      return aVer - bVer;
-    });
-    pb.innerHTML = sorted.slice(0, 10).map((d, i) => {
-      const idx = data.indexOf(d);
-      const hasNib = d.nib && String(d.nib).replace(/\D/g,'').length >= 8;
-      const nibBadge = hasNib 
-        ? '<span class="badge badge-success" style="margin-left:4px;font-size:9px;">NIB ✓</span>'
-        : '<span class="badge badge-warning" style="margin-left:4px;font-size:9px;">NIB —</span>';
-      return `<tr class="clickable-row" onclick="openDetailModal(${idx})">
-        <td>${esc(d.nama)}${nibBadge}</td>
-        <td>${esc(d.kbli||'—')}</td>
-        <td>${esc(d.kec||'—')}</td>
-        <td><span class="badge ${badgeClass(d.status)}">${esc(d.status)}</span></td>
-      </tr>`;
-    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">Belum ada data. Upload CSV dari menu Upload Data.</td></tr>';
-  }
   const dot = document.getElementById('kbliDot'); if (dot) dot.textContent = kbli;
   // Laporan summary
   const lt = document.getElementById('ls-total'); if (lt) lt.textContent = total;
