@@ -1197,73 +1197,6 @@ body { background:#F4F7FA!important; }
         </div>
       </div>
 
-      <!-- ===== KBLI ===== -->
-      <div id="page-kbli" class="page">
-        <div class="panel">
-          <div class="panel-header-row">
-            <span class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Temuan Potensi Ketidaksesuaian KBLI</span>
-            <button class="btn-export btn-sm" onclick="exportTableToCSV('kbliTable','Temuan_KBLI.csv')"><i class="fa-solid fa-download"></i> Unduh CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table id="kbliTable">
-              <thead><tr><th>Nama Usaha</th><th>KBLI Terdaftar</th><th>KBLI Seharusnya</th><th>Kecamatan</th><th>Keterangan</th></tr></thead>
-              <tbody id="kbliBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== LAPORAN ===== -->
-      <div id="page-laporan" class="page">
-        <div class="panel" style="margin-bottom:16px;">
-          <div class="panel-header-row">
-            <span class="panel-title"><i class="fa-solid fa-chart-column"></i> Sebaran Usaha per Kecamatan</span>
-            <button class="btn-export btn-sm" onclick="exportTableToCSV('laporanSummaryTable','Laporan_Ringkasan.csv')"><i class="fa-solid fa-download"></i> Unduh</button>
-          </div>
-          <canvas id="laporanChart" style="max-height:280px;"></canvas>
-        </div>
-        <div class="dash-grid">
-          <div class="panel">
-            <div class="panel-title"><i class="fa-solid fa-chart-pie"></i> Distribusi Jenis Dokumen Lingkungan</div>
-            <canvas id="jenisChart" style="max-height:240px;"></canvas>
-          </div>
-          <div class="panel">
-            <div class="panel-title"><i class="fa-solid fa-list-check"></i> Ringkasan Laporan</div>
-            <table id="laporanSummaryTable">
-              <tbody>
-                <tr><td>Total Persetujuan</td><td style="text-align:right;font-weight:700;" id="ls-total">0</td></tr>
-                <tr><td>Terverifikasi</td><td style="text-align:right;font-weight:700;color:var(--success);" id="ls-ver">0</td></tr>
-                <tr><td>Terinventarisasi</td><td style="text-align:right;font-weight:700;color:var(--warning);" id="ls-inv">0</td></tr>
-                <tr><td>Potensi Ketidaksesuaian KBLI</td><td style="text-align:right;font-weight:700;color:var(--danger);" id="ls-kbli">0</td></tr>
-                <tr><td>Belum Inventarisasi</td><td style="text-align:right;font-weight:700;color:var(--muted);" id="ls-belum">0</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      
-      <!-- ===== ROADMAP ===== -->
-      <div id="page-roadmap" class="page">
-        <div class="panel">
-          <div class="panel-title"><i class="fa-solid fa-road"></i> Roadmap Pengembangan VERITAS</div>
-          <ul style="list-style:none;">
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">Dashboard Eksekutif &amp; Statistik</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">Upload CSV Data OSS &amp; Amdalnet</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">Input Manual Data Persetujuan</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">Form Verifikasi Lapangan Lengkap</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">📷 Foto Lapangan — Kamera Langsung &amp; Galeri</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">💾 Penyimpanan Lokal Penuh — Tanpa Server/Google Sheet</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">3 Level Akses Pengguna: Pimpinan, Admin, Petugas</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">Ekspor Data ke CSV</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-done"><i class="fa-solid fa-check"></i></div><div class="rm-label done">Temuan &amp; Laporan Ketidaksesuaian KBLI</div><span class="rm-tag tag-done">Selesai</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-todo"></div><div class="rm-label todo">Integrasi Database Server (PostgreSQL)</div><span class="rm-tag tag-active">Berikutnya</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-todo"></div><div class="rm-label todo">Integrasi GIS &amp; Peta Sebaran Interaktif Penuh</div><span class="rm-tag tag-todo">Direncanakan</span></li>
-            <li class="roadmap-item"><div class="rm-check rm-todo"></div><div class="rm-label todo">Integrasi API OSS-RBA &amp; Amdalnet Langsung</div><span class="rm-tag tag-todo">Direncanakan</span></li>
-          </ul>
-        </div>
-      </div>
-
       <!-- ===== TENTANG & SOP ===== -->
       <div id="page-tentang" class="page">
         <div class="panel" style="margin-bottom:16px;">
@@ -1290,7 +1223,7 @@ body { background:#F4F7FA!important; }
                   <tr><td>Upload Data</td><td>—</td><td>✅</td><td>—</td></tr>
                   <tr><td>Data Persetujuan</td><td>✅</td><td>✅</td><td>✅</td></tr>
                   <tr><td>Inventarisasi</td><td>✅</td><td>✅</td><td>✅</td></tr>
-                  <tr><td>Verifikasi + Foto</td><td>—</td><td>✅</td><td>✅</td></tr>
+                  <tr><td>Verifikasi Lapangan</td><td>—</td><td>✅</td><td>✅</td></tr>
                   <tr><td>Temuan KBLI</td><td>✅</td><td>✅</td><td>—</td></tr>
                   <tr><td>Laporan</td><td>✅</td><td>✅</td><td>—</td></tr>
                   <tr><td>Pengaturan</td><td>—</td><td>✅</td><td>—</td></tr>
@@ -1404,9 +1337,9 @@ const SAMPLE_KBLI = [];
 // ========== ROLES ==========
 const ROLES = {
   pimpinan:{ label:'Pimpinan / Kepala Dinas', pass:'dlh2025', icon:'fa-crown',
-    menus:['dashboard','persetujuan','inventarisasi','kbli','laporan','roadmap','tentang'] },
+    menus:['dashboard','persetujuan','inventarisasi','tentang'] },
   admin:{ label:'Administrator', pass:'veritas123', icon:'fa-user-shield',
-    menus:['dashboard','upload','persetujuan','inventarisasi','verifikasi','kbli','laporan','roadmap','tentang','pengaturan'] },
+    menus:['dashboard','upload','persetujuan','inventarisasi','verifikasi','tentang','pengaturan'] },
   petugas:{ label:'Petugas DLH', pass:'petugas123', icon:'fa-user-tie',
     menus:['dashboard','persetujuan','inventarisasi','verifikasi','tentang'] },
 };
@@ -1415,17 +1348,13 @@ const MENU_DEF = [
   { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Menu Utama' },
   { id:'persetujuan',   label:'Data Persetujuan',     icon:'fa-file-circle-check',   grp:'Menu Utama' },
   { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Lapangan' },
-  { id:'verifikasi',    label:'Verifikasi + Foto',    icon:'fa-camera',              grp:'Lapangan' },
-  { id:'kbli',          label:'Temuan KBLI',          icon:'fa-triangle-exclamation',grp:'Analisis', badge:true },
-  { id:'laporan',       label:'Laporan Statistik',    icon:'fa-chart-column',        grp:'Analisis' },
-  { id:'roadmap',       label:'Roadmap',              icon:'fa-road',                grp:'Sistem' },
+  { id:'verifikasi',    label:'Verifikasi Lapangan',  icon:'fa-camera',              grp:'Lapangan' },
   { id:'tentang',       label:'Tentang & SOP',        icon:'fa-circle-info',         grp:'Sistem' },
   { id:'pengaturan',    label:'Pengaturan',            icon:'fa-gear',                grp:'Sistem' },
 ];
 const PAGE_TITLES = {
   dashboard:'Dashboard Eksekutif', upload:'Upload Data', persetujuan:'Data Persetujuan',
   inventarisasi:'Inventarisasi Lapangan', verifikasi:'Verifikasi Lapangan',
-  kbli:'Temuan Ketidaksesuaian KBLI', laporan:'Laporan Statistik', roadmap:'Roadmap Pengembangan',
   tentang:'Tentang & SOP VERITAS', pengaturan:'Pengaturan Sistem'
 };
 
@@ -1515,7 +1444,7 @@ function startAutoSync() {
     if (!mainApp || mainApp.style.display === 'none') return;
     const changed = await cloudPull(true);
     if (changed) {
-      renderDataTable(); renderVerifTable(); renderKbliTable();
+      renderDataTable(); renderVerifTable();
       refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
     }
   }, 10000);
@@ -1586,10 +1515,8 @@ function doLogout() {
   stopCamera();
   fotos = [];
   // Reset chart states
-  chartsInited = false; mapInited = false; laporanChartsInited = false;
+  chartsInited = false; mapInited = false;
   if (statusChartInst) { statusChartInst.destroy(); statusChartInst = null; }
-  if (laporanChartInst) { laporanChartInst.destroy(); laporanChartInst = null; }
-  if (jenisChartInst) { jenisChartInst.destroy(); jenisChartInst = null; }
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('username').value = '';
@@ -1597,8 +1524,8 @@ function doLogout() {
 }
 
 // ========== SESSION INIT ==========
-let chartsInited = false, mapInited = false, laporanChartsInited = false;
-let statusChartInst = null, laporanChartInst = null, jenisChartInst = null;
+let chartsInited = false, mapInited = false;
+let statusChartInst = null;
 
 async function initSession() {
   await cloudPull();
@@ -1606,7 +1533,6 @@ async function initSession() {
   document.getElementById('verifTanggal').value = todayISO();
   renderDataTable();
   renderVerifTable();
-  renderKbliTable();
   refreshFotoGrid();
   refreshDashboard();
   initStatusChart();
@@ -1645,9 +1571,7 @@ function showPage(id, el) {
   document.getElementById('sidebar').classList.remove('open');
   if (id === 'verifikasi') { populateVerifSelect(); }
   if (id === 'inventarisasi') { renderInvTable(); }
-  if (id === 'laporan') initLaporanCharts();
   if (id === 'dashboard') refreshDashboard();
-  if (id === 'kbli') renderKbliTable();
   updateStorageInfo();
 }
 
@@ -1748,33 +1672,6 @@ function initStatusChart() {
       datasets: [{ data: counts, backgroundColor: ['#28C76F','#FF9F43','#EA5455','#8FD9FB'], borderWidth: 0 }] },
     options: { responsive: true, plugins: { legend: { position:'bottom', labels:{ font:{ size:11 }, padding:10 } } }, cutout:'55%' }
   });
-}
-
-function initLaporanCharts() {
-  if (laporanChartsInited) return; laporanChartsInited = true;
-  const data = getPersetujuan();
-  const kecMap = {};
-  data.forEach(d => { if (d.kec) kecMap[d.kec] = (kecMap[d.kec] || 0) + 1; });
-  const kl = Object.keys(kecMap), kv = kl.map(k => kecMap[k]);
-  const lc = document.getElementById('laporanChart');
-  if (lc) {
-    if (laporanChartInst) laporanChartInst.destroy();
-    laporanChartInst = new Chart(lc, {
-      type: 'bar',
-      data: { labels: kl.length ? kl : ['Belum ada data'], datasets: [{ label:'Jumlah', data: kv.length ? kv : [0], backgroundColor:'#8FD9FB', borderRadius:6 }] },
-      options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ color:'#7A93A8' } }, x:{ ticks:{ color:'#7A93A8', maxRotation:45 } } } }
-    });
-  }
-  const spplC = ['SPPL','UKL-UPL','AMDAL'].map(dok => data.filter(x => x.dokumen === dok).length);
-  const jc = document.getElementById('jenisChart');
-  if (jc) {
-    if (jenisChartInst) jenisChartInst.destroy();
-    jenisChartInst = new Chart(jc, {
-      type: 'pie',
-      data: { labels: ['SPPL','UKL-UPL','AMDAL'], datasets: [{ data: spplC, backgroundColor: ['#8FD9FB','#FF9F43','#28C76F'], borderWidth:0 }] },
-      options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } } }
-    });
-  }
 }
 
 // ========== MAP ==========
@@ -2072,17 +1969,6 @@ function bukaVerifDari(idx) {
   }, 100);
 }
 
-function renderKbliTable() {
-  const kbliData = lsGet('veritas_kbli', SAMPLE_KBLI);
-  const tbody = document.getElementById('kbliBody'); if (!tbody) return;
-  tbody.innerHTML = kbliData.map(k => `<tr>
-    <td>${esc(k.nama)}</td>
-    <td><span class="badge badge-danger">${esc(k.kbliLama)}</span></td>
-    <td><span class="badge badge-success">${esc(k.kbliBaru)}</span></td>
-    <td>${esc(k.kec)}</td><td>${esc(k.ket)}</td>
-  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Belum ada temuan.</td></tr>';
-}
-
 // ========== DETAIL MODAL ==========
 function openDetailModal(idx) {
   const data = getPersetujuan();
@@ -2333,7 +2219,7 @@ function confirmClearAll() {
   localStorage.removeItem('veritas_verifikasi');
   localStorage.removeItem('veritas_kbli');
   fotos = [];
-  renderDataTable(); renderVerifTable(); renderKbliTable();
+  renderDataTable(); renderVerifTable();
   refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
   cloudPush();
   alert('✓ Semua data telah dihapus (termasuk di cloud, jadi tidak akan muncul lagi di device lain).');
@@ -2392,7 +2278,7 @@ function downloadSOP() {
   <div class="step"><div class="num">2</div><div><h4>Koordinasi dengan Pemilik Usaha</h4><p>Menghubungi penanggung jawab usaha untuk menjadwalkan kunjungan dan menginformasikan dokumen yang harus disiapkan (SPPL, UKL-UPL, atau AMDAL).</p></div></div>
   <div class="step"><div class="num">3</div><div><h4>Kunjungan, Observasi & Dokumentasi Foto</h4><p>Kunjungi lokasi, verifikasi aktivitas usaha, dan ambil foto lapangan langsung dari menu Verifikasi VERITAS menggunakan kamera HP atau upload galeri.</p></div></div>
   <div class="step"><div class="num">4</div><div><h4>Pemeriksaan Dokumen Lingkungan</h4><p>Periksa ketersediaan dan kesesuaian SPPL/UKL-UPL/AMDAL. Verifikasi kesesuaian kode KBLI dengan kegiatan aktual di lapangan.</p></div></div>
-  <div class="step"><div class="num">5</div><div><h4>Input Hasil Verifikasi ke VERITAS</h4><p>Input hasil verifikasi di menu Verifikasi + Foto: isi status kepatuhan, kesesuaian KBLI, catatan temuan, dan lampirkan foto. Data tersimpan otomatis tanpa Google Sheet.</p></div></div>
+  <div class="step"><div class="num">5</div><div><h4>Input Hasil Verifikasi ke VERITAS</h4><p>Input hasil verifikasi di menu Verifikasi Lapangan: isi status kepatuhan, kesesuaian KBLI, catatan temuan, dan lampirkan foto. Data tersimpan otomatis tanpa Google Sheet.</p></div></div>
   <div class="step"><div class="num">6</div><div><h4>Pelaporan dan Tindak Lanjut</h4><p>Laporkan ke Kepala Bidang. Temuan ketidaksesuaian KBLI atau pelanggaran diteruskan ke Tim Pengawasan untuk tindak lanjut administratif.</p></div></div>
   <div class="footer">VERITAS v3.0 — DLH Kabupaten Timor Tengah Selatan © 2025</div>
   </body></html>`;
