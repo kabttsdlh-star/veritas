@@ -1451,6 +1451,20 @@ function lsSet(key, val) {
 }
 
 let autoSyncTimer = null;
+// ========== AUTO-LOGOUT SETELAH TIDAK AKTIF (30 menit) ==========
+const IDLE_LIMIT_MS = 30 * 60 * 1000;
+let idleTimer = null;
+function resetIdleTimer() {
+  if (idleTimer) clearTimeout(idleTimer);
+  const mainApp = document.getElementById('mainApp');
+  if (!mainApp || mainApp.style.display === 'none') return;
+  idleTimer = setTimeout(() => {
+    alert('⏱️ Sesi berakhir karena 30 menit tidak ada aktivitas. Silakan login kembali.');
+    forceLogout();
+  }, IDLE_LIMIT_MS);
+}
+['mousemove','keydown','click','touchstart','scroll'].forEach(evt => document.addEventListener(evt, resetIdleTimer, { passive: true }));
+
 function startAutoSync() {
   if (autoSyncTimer) return;
   autoSyncTimer = setInterval(async () => {
@@ -1472,10 +1486,14 @@ function startAutoSync() {
     }
   }, 10000);
 }
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
 const DEFAULT_USERS = [
-  { id:'u_pimpinan', nama:'Pimpinan / Kepala Dinas', username:'pimpinan', password:'dlh2025',   role:'pimpinan', builtin:true },
-  { id:'u_admin',    nama:'Administrator Utama',      username:'admin',    password:'veritas123', role:'admin',    builtin:true },
-  { id:'u_petugas',  nama:'Petugas DLH (Default)',     username:'petugas',  password:'petugas123', role:'petugas',  builtin:true },
+  { id:'u_pimpinan', nama:'Pimpinan / Kepala Dinas', username:'pimpinan', password:'5a774aa1cf8417265e9a71e50c8ed87cabc1b6b2a15b21c2aa0d5cfd576fc03c', role:'pimpinan', builtin:true },
+  { id:'u_admin',    nama:'Administrator Utama',      username:'admin',    password:'5ca58e0f0032854c8394c2c340c9ce5a6551484e57a9e92875ed7c79674a27d7', role:'admin',    builtin:true },
+  { id:'u_petugas',  nama:'Petugas DLH (Default)',     username:'petugas',  password:'2dad904f71aa0dcf6ea1addaa084a5865ffe448e4d3f900668e1cc7e7b6153d7', role:'petugas',  builtin:true },
 ];
 function getUsers() { return lsGet('veritas_users', DEFAULT_USERS.map(u => ({...u}))); }
 function setUsers(d) { lsSet('veritas_users', d); }
@@ -1523,13 +1541,15 @@ function selectRole(role, el) {
   el.classList.add('selected');
 }
 let currentUser = null;
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('username').value.trim().toLowerCase();
   const p = document.getElementById('password').value;
   const err = document.getElementById('loginError');
   const users = getUsers();
-  const match = users.find(usr => usr.username.toLowerCase() === u && usr.password === p && usr.role === selectedRole);
+  const inputHash = await sha256(p);
+  const match = users.find(usr => usr.username.toLowerCase() === u && usr.role === selectedRole && (usr.password === inputHash || usr.password === p));
   if (match) {
+    if (match.password === p) { match.password = inputHash; setUsers(users); } // migrasi otomatis dari password polos lama
     err.style.display = 'none';
     currentRole = selectedRole;
     currentUser = match;
@@ -1544,6 +1564,7 @@ function doLogin() {
   }
 }
 function forceLogout() {
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
   localStorage.removeItem('veritas_session');
   currentUser = null;
   stopCamera();
@@ -1575,6 +1596,7 @@ async function initSession() {
   initMap();
   updateStorageInfo();
   startAutoSync();
+  resetIdleTimer();
 }
 
 function setupRole() {
@@ -2124,20 +2146,21 @@ function renderUsersTable() {
     const isSelf = currentUser && u.id === currentUser.id;
     const canDelete = !u.builtin && !isSelf;
     const delBtn = canDelete
-      ? `<button class="btn btn-sm btn-danger" onclick="hapusPengguna('${u.id}')"><i class="fa-solid fa-trash"></i></button>`
+      ? `<button class="btn btn-sm btn-danger" onclick="hapusPengguna('${u.id}')" title="Hapus permanen"><i class="fa-solid fa-trash"></i></button>`
       : `<span style="color:var(--muted);font-size:12px;" title="${u.builtin ? 'Akun bawaan sistem' : 'Akun yang sedang login'}"><i class="fa-solid fa-lock"></i></span>`;
+    const pwBtn = `<button class="btn btn-sm" onclick="ubahPasswordPengguna('${u.id}')" title="Ubah password" style="margin-right:4px;"><i class="fa-solid fa-key"></i></button>`;
     return `<tr>
       <td>${esc(u.nama)}${isSelf ? ' <span style="color:var(--muted);font-size:10px;">(Anda)</span>' : ''}</td>
       <td><code>${esc(u.username)}</code></td>
       <td><span class="badge ${roleBadge[u.role]||''}">${roleLabel[u.role]||u.role}</span></td>
-      <td>${delBtn}</td>
+      <td>${pwBtn}${delBtn}</td>
     </tr>`;
   }).join('');
   const pc = document.getElementById('petugasCountLabel'); if (pc) pc.textContent = users.filter(u => u.role === 'petugas').length;
   const pm = document.getElementById('petugasMaxLabel'); if (pm) pm.textContent = MAX_PETUGAS;
 }
 
-function tambahPengguna() {
+async function tambahPengguna() {
   const nama = document.getElementById('newUserNama').value.trim();
   const role = document.getElementById('newUserRole').value;
   const username = document.getElementById('newUserUsername').value.trim().toLowerCase();
@@ -2154,13 +2177,27 @@ function tambahPengguna() {
     return;
   }
 
-  users.push({ id: 'u_' + Date.now(), nama, username, password, role, builtin: false });
+  const passwordHash = await sha256(password);
+  users.push({ id: 'u_' + Date.now(), nama, username, password: passwordHash, role, builtin: false });
   setUsers(users);
   renderUsersTable();
   ['newUserNama','newUserUsername','newUserPassword'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   alert(`✓ Pengguna "${nama}" berhasil ditambahkan sebagai ${roleLabelOf(role)}. Kredensial ini yang dipakai untuk login.`);
 }
 function roleLabelOf(role) { return role === 'petugas' ? 'Petugas' : role === 'admin' ? 'Admin' : 'Pimpinan'; }
+
+async function ubahPasswordPengguna(id) {
+  const users = getUsers();
+  const target = users.find(u => u.id === id);
+  if (!target) return;
+  const newPass = prompt(`Masukkan password baru untuk "${target.nama}" (${target.username}), minimal 6 karakter:`);
+  if (newPass === null) return;
+  if (newPass.length < 6) { alert('Password minimal 6 karakter. Tidak disimpan.'); return; }
+  target.password = await sha256(newPass);
+  setUsers(users);
+  renderUsersTable();
+  alert(`✓ Password untuk "${target.nama}" berhasil diubah.`);
+}
 
 function hapusPengguna(id) {
   const users = getUsers();
