@@ -938,10 +938,10 @@ body { background:#F4F7FA!important; }
           </div>
         </div>
         <div class="stat-grid">
-          <div class="stat-card blue"><div class="stat-label">Total Persetujuan</div><div class="stat-number" id="totalUsaha">0</div><div class="stat-desc">Data OSS &amp; Amdalnet terintegrasi</div><i class="fa-solid fa-file stat-icon"></i></div>
-          <div class="stat-card green"><div class="stat-label">Terinventarisasi</div><div class="stat-number" id="totalInventarisasi">0</div><div class="stat-desc">Usaha tercatat lapangan</div><i class="fa-solid fa-map stat-icon"></i></div>
-          <div class="stat-card orange"><div class="stat-label">Terverifikasi</div><div class="stat-number" id="totalVerifikasi">0</div><div class="stat-desc">Dokumen &amp; kondisi sesuai</div><i class="fa-solid fa-check stat-icon"></i></div>
-          <div class="stat-card red"><div class="stat-label">Ketidaksesuaian KBLI</div><div class="stat-number" id="totalKBLI">0</div><div class="stat-desc">Perlu tindak lanjut segera</div><i class="fa-solid fa-triangle-exclamation stat-icon"></i></div>
+          <div class="stat-card blue"><div class="stat-label">Inventarisasi</div><div class="stat-number" id="totalUsaha">0</div><div class="stat-desc">Total usaha terdata di sistem</div><i class="fa-solid fa-clipboard-list stat-icon"></i></div>
+          <div class="stat-card green"><div class="stat-label">Ada NIB</div><div class="stat-number" id="totalAdaNib">0</div><div class="stat-desc">Usaha dengan NIB terbit</div><i class="fa-solid fa-circle-check stat-icon"></i></div>
+          <div class="stat-card orange"><div class="stat-label">Tidak Ada NIB</div><div class="stat-number" id="totalTidakNib">0</div><div class="stat-desc">Usaha belum ber-NIB</div><i class="fa-solid fa-circle-exclamation stat-icon"></i></div>
+          <div class="stat-card red"><div class="stat-label">Terverifikasi</div><div class="stat-number" id="totalVerifikasi">0</div><div class="stat-desc">Verifikasi lapangan + foto</div><i class="fa-solid fa-camera stat-icon"></i></div>
         </div>
         <!-- Storage panel -->
         <div class="panel" style="margin-bottom:16px;">
@@ -1665,18 +1665,21 @@ function esc(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,
 function refreshDashboard() {
   const data = getPersetujuan();
   const inv = data.filter(d => d.status === 'Inventarisasi' || d.status === 'Terverifikasi').length;
-  const ver = data.filter(d => d.status === 'Terverifikasi').length;
   const kbli = data.filter(d => d.status === 'Ketidaksesuaian KBLI').length;
   const total = data.length;
-  
+
+  // Terverifikasi = usaha yang benar-benar sudah menjalani verifikasi lapangan + foto
+  const verifRecords = getVerifikasi();
+  const ver = new Set(verifRecords.map(v => v.nama)).size;
+
   // Hitung NIB terbit vs belum lengkap
   const nibTerbit = data.filter(d => d.nib && String(d.nib).replace(/\D/g,'').length >= 8).length;
   const nibBelum = total - nibTerbit;
-  
+
   animateCounter('totalUsaha', total);
-  animateCounter('totalInventarisasi', inv);
+  animateCounter('totalAdaNib', nibTerbit);
+  animateCounter('totalTidakNib', nibBelum);
   animateCounter('totalVerifikasi', ver);
-  animateCounter('totalKBLI', kbli);
   
   const ri = document.getElementById('r-inv'); if (ri) ri.textContent = inv;
   const rb = document.getElementById('r-belum'); if (rb) rb.textContent = Math.max(0, total - inv);
