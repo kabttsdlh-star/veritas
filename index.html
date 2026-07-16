@@ -152,7 +152,7 @@ body{background:var(--gray-50);color:var(--text);}
 .panel-header-row .panel-title{margin-bottom:0;border-bottom:none;padding-bottom:0;}
 
 /* ====== MAP ====== */
-#leafletMap{height:320px;border-radius:var(--r-sm);}
+#leafletMap{height:560px;border-radius:var(--r-sm);}
 
 /* ====== RINGKASAN ====== */
 .ringkasan-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
@@ -298,6 +298,7 @@ table tr.clickable-row:hover td{background:var(--bb-bg);}
 
 /* ====== RESPONSIVE ====== */
 @media(max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr);}.dash-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){#leafletMap{height:380px;}}
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);transition:transform .25s;}
   .sidebar.open{transform:translateX(0);}
@@ -950,22 +951,9 @@ body { background:#F4F7FA!important; }
           <div class="storage-bar-wrap"><div class="storage-bar" id="storageBar" style="width:1%"></div></div>
           <div style="font-size:11.5px;color:var(--muted);margin-top:6px;"><i class="fa-solid fa-circle-info" style="color:var(--bb3);"></i> Semua data (input, verifikasi, foto) tersimpan di browser ini. Tidak memerlukan server atau Google Sheet.</div>
         </div>
-        <div class="dash-grid">
-          <div class="panel">
-            <div class="panel-title"><i class="fa-solid fa-map-location-dot"></i> Peta Sebaran Persetujuan</div>
-            <div id="leafletMap"></div>
-          </div>
-          <div class="panel">
-            <div class="panel-title"><i class="fa-solid fa-chart-pie"></i> Status Persetujuan</div>
-            <canvas id="statusChart" style="max-height:185px;"></canvas>
-            <div class="panel-title" style="margin-top:14px;"><i class="fa-solid fa-table-list"></i> Ringkasan</div>
-            <div class="ringkasan-grid">
-              <div class="ring-item"><div><div class="ring-label">✅ NIB Terbit (Prioritas)</div><div class="ring-value" id="r-oss" style="color:#1A9E55">0</div></div></div>
-              <div class="ring-item"><div><div class="ring-label">⚠️ NIB Belum Lengkap</div><div class="ring-value" id="r-amdalnet" style="color:#D97706">0</div></div></div>
-              <div class="ring-item"><div><div class="ring-label">Sudah Inventarisasi</div><div class="ring-value" id="r-inv">0</div></div></div>
-              <div class="ring-item"><div><div class="ring-label">Belum Inventarisasi</div><div class="ring-value" id="r-belum">328</div></div></div>
-            </div>
-          </div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title"><i class="fa-solid fa-map-location-dot"></i> Peta Sebaran Persetujuan</div>
+          <div id="leafletMap"></div>
         </div>
       </div>
 
@@ -1514,8 +1502,7 @@ function doLogout() {
   stopCamera();
   fotos = [];
   // Reset chart states
-  chartsInited = false; mapInited = false;
-  if (statusChartInst) { statusChartInst.destroy(); statusChartInst = null; }
+  mapInited = false;
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('username').value = '';
@@ -1523,8 +1510,7 @@ function doLogout() {
 }
 
 // ========== SESSION INIT ==========
-let chartsInited = false, mapInited = false;
-let statusChartInst = null;
+let mapInited = false;
 
 async function initSession() {
   await cloudPull();
@@ -1535,7 +1521,6 @@ async function initSession() {
   renderHasilVerifikasi();
   refreshFotoGrid();
   refreshDashboard();
-  initStatusChart();
   initMap();
   updateStorageInfo();
   startAutoSync();
@@ -1628,26 +1613,6 @@ function animateCounter(id, target) {
   const t = setInterval(() => { v = Math.min(v + inc, target); el.textContent = v; if (v >= target) clearInterval(t); }, 18);
 }
 
-// ========== FIX: CHARTS — destroy before re-create ==========
-function initStatusChart() {
-  if (chartsInited) return; chartsInited = true;
-  const data = getPersetujuan();
-  const counts = [
-    data.filter(d => d.status === 'Terverifikasi').length,
-    data.filter(d => d.status === 'Inventarisasi').length,
-    data.filter(d => d.status === 'Ketidaksesuaian KBLI').length,
-    data.filter(d => d.status === 'Belum Inventarisasi').length,
-  ];
-  const ctx = document.getElementById('statusChart'); if (!ctx) return;
-  if (statusChartInst) { statusChartInst.destroy(); }
-  statusChartInst = new Chart(ctx, {
-    type: 'doughnut',
-    data: { labels: ['Terverifikasi','Inventarisasi','Ketidaksesuaian KBLI','Belum Inventarisasi'],
-      datasets: [{ data: counts, backgroundColor: ['#28C76F','#FF9F43','#EA5455','#8FD9FB'], borderWidth: 0 }] },
-    options: { responsive: true, plugins: { legend: { position:'bottom', labels:{ font:{ size:11 }, padding:10 } } }, cutout:'55%' }
-  });
-}
-
 // ========== MAP ==========
 function initMap() {
   if (mapInited) return; mapInited = true;
@@ -1666,7 +1631,7 @@ function initMap() {
         const div = L.DomUtil.create('div');
         div.style.cssText = 'background:rgba(255,255,255,.95);padding:10px 14px;border-radius:10px;font-size:11px;line-height:1.9;box-shadow:0 2px 10px rgba(0,0,0,.15);min-width:160px;';
         div.innerHTML = '<strong style="display:block;margin-bottom:5px;color:#1B3F72;font-size:12px;">Status Usaha</strong>' +
-          ['Terverifikasi ✅:#28C76F','NIB Terbit (Prioritas):#1B3F72','Ketidaksesuaian KBLI:#EA5455','Belum Inventarisasi:#8FD9FB']
+          ['✅ Lolos - Terverifikasi:#28C76F','⚠️ Tidak Lolos - Ketidaksesuaian KBLI:#EA5455','Ada NIB (Belum Verifikasi):#1B3F72','Tidak Ada NIB:#8FD9FB']
           .map(s => { const [l,c] = s.split(':'); return `<div><span style="display:inline-block;width:11px;height:11px;background:${c};border-radius:50%;margin-right:6px;vertical-align:middle;border:1.5px solid rgba(0,0,0,.1);"></span>${l}</div>`; }).join('');
         return div;
       };
