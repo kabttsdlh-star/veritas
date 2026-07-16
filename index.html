@@ -2328,13 +2328,15 @@ function confirmClearAll() {
   fotos = [];
   renderDataTable(); renderVerifTable(); renderKbliTable();
   refreshFotoGrid(); refreshDashboard(); updateStorageInfo();
-  alert('✓ Semua data telah dihapus.');
+  cloudPush();
+  alert('✓ Semua data telah dihapus (termasuk di cloud, jadi tidak akan muncul lagi di device lain).');
 }
 function resetVerifikasi() {
   if (!confirm('Hapus semua data verifikasi? Data persetujuan tidak terpengaruh.')) return;
   localStorage.removeItem('veritas_verifikasi');
   renderVerifTable(); updateStorageInfo();
-  alert('✓ Data verifikasi dihapus.');
+  cloudPush();
+  alert('✓ Data verifikasi dihapus (termasuk di cloud, jadi tidak akan muncul lagi di device lain).');
 }
 
 // ========== EXPORT CSV ==========
