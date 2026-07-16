@@ -1074,13 +1074,8 @@ body { background:#F4F7FA!important; }
             <div class="ring-item"><div><div class="ring-label">Dalam Proses</div><div class="ring-value" style="color:var(--warning);" id="inv-proses">0</div></div></div>
             <div class="ring-item"><div><div class="ring-label">Belum Diverifikasi</div><div class="ring-value" style="color:var(--danger);" id="inv-belum">0</div></div></div>
           </div>
-          <div class="panel-title"><i class="fa-solid fa-list"></i> Status per Usaha</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Nama Usaha</th><th>Kecamatan</th><th>NIB</th><th>Penanggung Jawab</th><th>Status</th><th>Tgl Verifikasi</th><th>Aksi</th></tr></thead>
-              <tbody id="invTableBody"></tbody>
-            </table>
-          </div>
+          <div class="panel-title"><i class="fa-solid fa-list"></i> Data per Kecamatan</div>
+          <div id="invKecList"></div>
         </div>
       </div>
 
@@ -1337,17 +1332,17 @@ const SAMPLE_KBLI = [];
 // ========== ROLES ==========
 const ROLES = {
   pimpinan:{ label:'Pimpinan / Kepala Dinas', pass:'dlh2025', icon:'fa-crown',
-    menus:['dashboard','persetujuan','inventarisasi','tentang'] },
+    menus:['dashboard','inventarisasi','persetujuan','tentang'] },
   admin:{ label:'Administrator', pass:'veritas123', icon:'fa-user-shield',
-    menus:['dashboard','upload','persetujuan','inventarisasi','verifikasi','tentang','pengaturan'] },
+    menus:['dashboard','inventarisasi','upload','persetujuan','verifikasi','tentang','pengaturan'] },
   petugas:{ label:'Petugas DLH', pass:'petugas123', icon:'fa-user-tie',
-    menus:['dashboard','persetujuan','inventarisasi','verifikasi','tentang'] },
+    menus:['dashboard','inventarisasi','persetujuan','verifikasi','tentang'] },
 };
 const MENU_DEF = [
   { id:'dashboard',     label:'Dashboard',           icon:'fa-house',               grp:'Menu Utama' },
-  { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Menu Utama' },
-  { id:'persetujuan',   label:'Data Persetujuan',     icon:'fa-file-circle-check',   grp:'Menu Utama' },
-  { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Lapangan' },
+  { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Menu Utama' },
+  { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Lapangan' },
+  { id:'persetujuan',   label:'Data Persetujuan',     icon:'fa-file-circle-check',   grp:'Lapangan' },
   { id:'verifikasi',    label:'Verifikasi Lapangan',  icon:'fa-camera',              grp:'Lapangan' },
   { id:'tentang',       label:'Tentang & SOP',        icon:'fa-circle-info',         grp:'Sistem' },
   { id:'pengaturan',    label:'Pengaturan',            icon:'fa-gear',                grp:'Sistem' },
@@ -1909,7 +1904,7 @@ function renderDataTable() {
 
 function renderInvTable() {
   const data = getPersetujuan();
-  const tbody = document.getElementById('invTableBody'); if (!tbody) return;
+  const container = document.getElementById('invKecList'); if (!container) return;
   const done    = data.filter(d => d.status === 'Terverifikasi').length;
   const proses  = data.filter(d => d.status === 'Inventarisasi').length;
   const belum   = data.filter(d => d.status === 'Belum Inventarisasi').length;
@@ -1918,46 +1913,85 @@ function renderInvTable() {
   const di = document.getElementById('inv-done');    if (di) di.textContent = done;
   const dp = document.getElementById('inv-proses');  if (dp) dp.textContent = proses;
   const db = document.getElementById('inv-belum');   if (db) db.textContent = belum;
-  // Update target total = NIB terbit (yang jadi prioritas)
   const dt = document.querySelector('#page-inventarisasi .ring-value');
   if (dt) dt.textContent = nibOk;
 
-  // Sort: NIB terbit & belum diverifikasi dulu (prioritas), lalu yang sudah selesai
-  const sorted = [...data].map((d,i) => ({...d, _origIdx: i})).sort((a,b) => {
-    const aNib = a.nib && String(a.nib).replace(/[^0-9]/g,'').length >= 8 ? 0 : 1;
-    const bNib = b.nib && String(b.nib).replace(/[^0-9]/g,'').length >= 8 ? 0 : 1;
-    if (aNib !== bNib) return aNib - bNib;
-    const order = {'Belum Inventarisasi':0,'Inventarisasi':1,'Terverifikasi':2,'Ketidaksesuaian KBLI':3};
-    return (order[a.status]||0) - (order[b.status]||0);
+  if (!data.length) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:#6B8FA8;">Belum ada data. Upload CSV dari menu Upload Data.</div>';
+    return;
+  }
+
+  // Kelompokkan berdasarkan kecamatan
+  const groups = {};
+  data.forEach((d, i) => {
+    const kec = d.kec || 'Tanpa Kecamatan';
+    (groups[kec] = groups[kec] || []).push({ ...d, _origIdx: i });
   });
+  const kecNames = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'id'));
 
-  tbody.innerHTML = sorted.length ? sorted.map((d) => {
-    const hasNib = d.nib && String(d.nib).replace(/[^0-9]/g,'').length >= 8;
-    let badge = 'badge-info', label = 'Belum Dimulai';
-    if (d.status === 'Terverifikasi')       { badge = 'badge-success'; label = '✅ Terverifikasi'; }
-    else if (d.status === 'Inventarisasi')  { badge = 'badge-warning'; label = '🔄 Dalam Proses'; }
-    else if (d.status === 'Ketidaksesuaian KBLI') { badge = 'badge-danger'; label = '⚠️ Temuan KBLI'; }
-    
-    const nibBadge = hasNib
-      ? '<span class="badge badge-success" style="font-size:9px;margin-left:3px;">NIB ✓</span>'
-      : '<span class="badge" style="background:#FFF8E1;color:#E65100;font-size:9px;margin-left:3px;">NIB —</span>';
-    
-    const aksiBtn = d.status !== 'Terverifikasi'
-      ? `<button onclick="bukaVerifDari(${d._origIdx})" style="padding:3px 10px;font-size:11px;background:linear-gradient(135deg,#1B3F72,#1a56a0);color:#fff;border:none;border-radius:6px;cursor:pointer;">
-          <i class="fa-solid fa-camera"></i> Verifikasi
-        </button>`
-      : `<span style="color:#28C76F;font-size:11px;"><i class="fa-solid fa-circle-check"></i> Selesai</span>`;
+  container.innerHTML = kecNames.map((kec, gi) => {
+    const items = groups[kec];
+    const belumCount = items.filter(d => d.status === 'Belum Inventarisasi').length;
+    const doneCount = items.filter(d => d.status === 'Terverifikasi').length;
 
-    return `<tr>
-      <td><strong>${esc(d.nama)}</strong>${nibBadge}</td>
-      <td>${esc(d.kec||'—')}</td>
-      <td style="font-size:11px">${esc(d.nib||'—')}</td>
-      <td>${esc(d.pj||'—')}</td>
-      <td><span class="badge ${badge}">${label}</span></td>
-      <td>${esc(d.tglVerif||'—')}</td>
-      <td>${aksiBtn}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:24px;color:#6B8FA8;">Belum ada data. Upload CSV dari menu Upload Data.</td></tr>';
+    const sortedItems = [...items].sort((a, b) => {
+      const aNib = a.nib && String(a.nib).replace(/[^0-9]/g,'').length >= 8 ? 0 : 1;
+      const bNib = b.nib && String(b.nib).replace(/[^0-9]/g,'').length >= 8 ? 0 : 1;
+      if (aNib !== bNib) return aNib - bNib;
+      const order = {'Belum Inventarisasi':0,'Inventarisasi':1,'Terverifikasi':2,'Ketidaksesuaian KBLI':3};
+      return (order[a.status]||0) - (order[b.status]||0);
+    });
+
+    const rows = sortedItems.map(d => {
+      const hasNib = d.nib && String(d.nib).replace(/[^0-9]/g,'').length >= 8;
+      const nibBadge = hasNib
+        ? '<span class="badge badge-success" style="font-size:9px;margin-left:3px;">NIB ✓</span>'
+        : '<span class="badge" style="background:#FFF8E1;color:#E65100;font-size:9px;margin-left:3px;">NIB —</span>';
+      const aksiBtn = d.status !== 'Terverifikasi'
+        ? `<button onclick="bukaVerifDari(${d._origIdx})" style="padding:3px 10px;font-size:11px;background:linear-gradient(135deg,#1B3F72,#1a56a0);color:#fff;border:none;border-radius:6px;cursor:pointer;">
+            <i class="fa-solid fa-camera"></i> Verifikasi
+          </button>`
+        : `<span style="color:#28C76F;font-size:11px;"><i class="fa-solid fa-circle-check"></i> Selesai</span>`;
+      return `<tr>
+        <td><strong>${esc(d.nama)}</strong>${nibBadge}</td>
+        <td style="font-size:11px">${esc(d.nib||'—')}</td>
+        <td>${esc(d.pj||'—')}</td>
+        <td>${esc(d.tglVerif||'—')}</td>
+        <td>${aksiBtn}</td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="kec-group" style="margin-bottom:10px;border:1px solid #E3ECF3;border-radius:10px;overflow:hidden;">
+      <div class="kec-header" onclick="toggleKecGroup(${gi})" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#F4F8FB;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <i class="fa-solid fa-chevron-right kec-chevron" id="kec-chevron-${gi}" style="transition:transform .2s;color:#1B3F72;font-size:12px;"></i>
+          <strong style="color:#1B3F72;">${esc(kec)}</strong>
+          <span style="color:#6B8FA8;font-size:12px;">(${items.length} usaha)</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          ${belumCount > 0 ? `<span class="badge" style="background:#FFF8E1;color:#E65100;font-size:10px;">${belumCount} belum</span>` : ''}
+          ${doneCount > 0 ? `<span class="badge badge-success" style="font-size:10px;">${doneCount} selesai</span>` : ''}
+        </div>
+      </div>
+      <div class="kec-body" id="kec-body-${gi}" style="display:none;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nama Usaha</th><th>NIB</th><th>Penanggung Jawab</th><th>Tgl Verifikasi</th><th>Aksi</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleKecGroup(gi) {
+  const body = document.getElementById('kec-body-' + gi);
+  const chevron = document.getElementById('kec-chevron-' + gi);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.style.transform = isOpen ? 'rotate(90deg)' : 'rotate(0deg)';
 }
 
 // Buka halaman verifikasi langsung dengan usaha terpilih
