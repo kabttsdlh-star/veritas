@@ -2077,7 +2077,7 @@ function ambilLokasi() {
     { enableHighAccuracy: true, timeout: 10000 }
   );
 }
-const IMGBB_API_KEY = 'GANTI_DENGAN_API_KEY_IMGBB'; // daftar gratis di https://api.imgbb.com/
+const IMGBB_API_KEY = 'dc21ff67aa71a836a7bbc848f7c0a027'; // daftar gratis di https://api.imgbb.com/
 async function uploadToImgBB(dataUrl) {
   const base64 = dataUrl.split(',')[1];
   const fd = new FormData();
@@ -2102,7 +2102,6 @@ async function saveVerifikasi() {
 
   // Upload foto ke ImgBB dulu (supaya bisa dilihat dari device lain). Kalau gagal/offline, tetap simpan lokal.
   const uploadedFotos = await Promise.all(fotos.map(async f => {
-    if (IMGBB_API_KEY === 'GANTI_DENGAN_API_KEY_IMGBB') return { dataUrl: f.dataUrl, name: f.name, time: f.time, url: null };
     try {
       const url = await uploadToImgBB(f.dataUrl);
       return { dataUrl: f.dataUrl, name: f.name, time: f.time, url };
