@@ -1394,11 +1394,16 @@ async function cloudPull(silent) {
 
     if (data.persetujuan) localStorage.setItem('veritas_persetujuan', JSON.stringify(data.persetujuan));
     if (data.verifikasi) {
+      // Jangan timpa data lokal yang belum sempat ter-push ke cloud (hindari race condition)
+      const cloudIds = new Set(data.verifikasi.map(v => v.id));
+      const localOnly = localVerif.filter(v => !cloudIds.has(v.id));
       const merged = data.verifikasi.map(v => ({
         ...v,
         fotos: localFotoMap[v.id] || v.fotos || []
       }));
-      localStorage.setItem('veritas_verifikasi', JSON.stringify(merged));
+      const combined = [...localOnly, ...merged].sort((a, b) => b.id - a.id);
+      localStorage.setItem('veritas_verifikasi', JSON.stringify(combined));
+      if (localOnly.length) cloudPush(); // dorong lagi data yang tadi belum sempat ke-sync
     }
     if (data.kbli) localStorage.setItem('veritas_kbli', JSON.stringify(data.kbli));
     if (data.users) localStorage.setItem('veritas_users', JSON.stringify(data.users));
