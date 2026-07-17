@@ -1159,7 +1159,7 @@ body { background:#F4F7FA!important; }
             </div>
           </div>
           <div style="display:flex;gap:10px;margin-top:18px;">
-            <button class="btn btn-success" onclick="saveVerifikasi()"><i class="fa-solid fa-floppy-disk"></i> Simpan Hasil Verifikasi</button>
+            <button class="btn btn-success" id="btnSimpanVerif" onclick="saveVerifikasi()"><i class="fa-solid fa-floppy-disk"></i> Simpan Hasil Verifikasi</button>
             <button class="btn-outline" onclick="clearVerifForm()"><i class="fa-solid fa-rotate-left"></i> Reset Form</button>
           </div>
 
@@ -1411,8 +1411,9 @@ async function cloudPush() {
   syncing = true;
   try {
     const verifLight = lsGet('veritas_verifikasi', []).map(v => {
+      const lightFotos = (v.fotos || []).map(f => ({ name: f.name, url: f.url || null, time: f.time }));
       const { fotos, ...rest } = v;
-      return { ...rest, jumlahFoto: (fotos || []).length };
+      return { ...rest, fotos: lightFotos };
     });
     const res = await fetch(SYNC_URL, {
       method: 'POST',
@@ -2076,13 +2077,42 @@ function ambilLokasi() {
     { enableHighAccuracy: true, timeout: 10000 }
   );
 }
-function saveVerifikasi() {
+const IMGBB_API_KEY = 'GANTI_DENGAN_API_KEY_IMGBB'; // daftar gratis di https://api.imgbb.com/
+async function uploadToImgBB(dataUrl) {
+  const base64 = dataUrl.split(',')[1];
+  const fd = new FormData();
+  fd.append('image', base64);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
+  const json = await res.json();
+  if (json.success) return json.data.url;
+  throw new Error((json.error && json.error.message) || 'Upload gagal');
+}
+
+async function saveVerifikasi() {
   const idxVal = document.getElementById('verifUsaha').value;
   const petugas = document.getElementById('verifPetugas').value.trim();
   const hasil = document.getElementById('verifHasil').value;
   if (!idxVal) { alert('Pilih usaha yang akan diverifikasi'); return; }
   if (!petugas) { alert('Nama petugas wajib diisi'); return; }
   if (!hasil) { alert('Hasil verifikasi wajib dipilih'); return; }
+
+  const btn = document.getElementById('btnSimpanVerif');
+  const btnOrigHTML = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengunggah foto...'; }
+
+  // Upload foto ke ImgBB dulu (supaya bisa dilihat dari device lain). Kalau gagal/offline, tetap simpan lokal.
+  const uploadedFotos = await Promise.all(fotos.map(async f => {
+    if (IMGBB_API_KEY === 'GANTI_DENGAN_API_KEY_IMGBB') return { dataUrl: f.dataUrl, name: f.name, time: f.time, url: null };
+    try {
+      const url = await uploadToImgBB(f.dataUrl);
+      return { dataUrl: f.dataUrl, name: f.name, time: f.time, url };
+    } catch(e) {
+      console.warn('Upload foto ke ImgBB gagal, disimpan lokal saja:', e);
+      return { dataUrl: f.dataUrl, name: f.name, time: f.time, url: null };
+    }
+  }));
+
+  if (btn) { btn.disabled = false; btn.innerHTML = btnOrigHTML; }
 
   const data = getPersetujuan();
   const usaha = data[parseInt(idxVal)];
@@ -2105,7 +2135,7 @@ function saveVerifikasi() {
     koordinat: document.getElementById('verifKoordinat').value.trim() || '—',
     hasil,
     catatan: document.getElementById('verifCatatan').value || '',
-    fotos: fotos.map(f => ({ dataUrl: f.dataUrl, name: f.name, time: f.time }))
+    fotos: uploadedFotos
   });
   setVerifikasi(verifs);
 
@@ -2234,7 +2264,7 @@ function renderHasilVerifikasi() {
   list.innerHTML = verifs.map(v => {
     const fotoHtml = (v.fotos && v.fotos.length)
       ? `<div class="foto-grid" style="margin-top:10px;">` + v.fotos.map(f =>
-          `<img src="${f.dataUrl}" alt="Foto lapangan" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #E3ECF3;" onclick="showVerifFotos(${v.id})">`
+          `<img src="${f.dataUrl || f.url}" alt="Foto lapangan" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #E3ECF3;" onclick="showVerifFotos(${v.id})">`
         ).join('') + `</div>`
       : `<div style="font-size:12px;color:var(--muted);margin-top:8px;"><i class="fa-solid fa-image"></i> Tidak ada foto lampiran</div>`;
     return `<div style="border:1px solid #E3ECF3;border-radius:12px;padding:16px;margin-bottom:14px;background:#fff;">
@@ -2294,7 +2324,7 @@ function showVerifFotos(id) {
 function renderFotoViewer() {
   const f = fotoViewerList[fotoViewerIdx];
   if (!f) return;
-  document.getElementById('fotoViewerImg').src = f.dataUrl;
+  document.getElementById('fotoViewerImg').src = f.dataUrl || f.url;
   document.getElementById('fotoViewerCaption').textContent = (f.name || 'Foto lapangan') + (f.time ? ' · ' + new Date(f.time).toLocaleString('id-ID') : '');
   const nav = document.getElementById('fotoViewerNav');
   const ctr = document.getElementById('fotoViewerCounter');
