@@ -910,7 +910,6 @@ body { background:#F4F7FA!important; }
         </div>
       </div>
       <div class="topbar-right">
-        <div class="sync-pill" id="syncPill"><i class="fa-solid fa-circle-check"></i> Tersimpan</div>
         <div class="date-badge"><i class="fa-regular fa-calendar"></i><span id="todayDate"></span></div>
         <div class="user-info">
           <div class="user-avatar" id="userAvatar"><i class="fa-solid fa-user"></i></div>
@@ -1001,9 +1000,7 @@ body { background:#F4F7FA!important; }
               <div class="form-group"><label>Tingkat Risiko</label>
                 <select id="m_risiko"><option value="">-- Pilih --</option><option>Rendah</option><option>Menengah Rendah</option><option>Menengah Tinggi</option><option>Tinggi</option></select>
               </div>
-              <div class="form-group"><label>Status</label>
-                <select id="m_status"><option>Belum Inventarisasi</option><option>Terverifikasi</option><option>Ketidaksesuaian KBLI</option></select>
-              </div>
+              <div class="form-group"><label>Nomor NIB (kalau sudah terbit)</label><input id="m_nib" type="text" placeholder="cth: 1234567890123 — kosongkan kalau belum ada"></div>
               <div class="form-group"><label>Sumber Data</label>
                 <select id="m_sumber"><option>OSS</option><option>Amdalnet</option><option>Input Manual</option></select>
               </div>
@@ -1902,7 +1899,7 @@ function saveManualData() {
     hp:document.getElementById('m_hp').value||'—', email:document.getElementById('m_email').value||'—',
     kbli:document.getElementById('m_kbli').value||'—', dokumen:document.getElementById('m_dokumen').value||'—',
     kewenangan:document.getElementById('m_kewenangan').value||'—', risiko:document.getElementById('m_risiko').value||'—',
-    status:document.getElementById('m_status').value, sumber:document.getElementById('m_sumber').value, tglVerif:'' });
+    nib:document.getElementById('m_nib').value.trim()||'', status:'Belum Inventarisasi', sumber:document.getElementById('m_sumber').value, tglVerif:'' });
   setPersetujuan(data);
   clearManualForm();
   renderDataTable();
@@ -1911,9 +1908,8 @@ function saveManualData() {
   showPage('inventarisasi', null);
 }
 function clearManualForm() {
-  ['m_nama','m_pj','m_alamat','m_hp','m_email','m_kbli'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['m_nama','m_pj','m_alamat','m_hp','m_email','m_kbli','m_nib'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['m_kec','m_dokumen','m_kewenangan','m_risiko'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('m_status').value = 'Belum Inventarisasi';
   document.getElementById('m_sumber').value = 'OSS';
 }
 
