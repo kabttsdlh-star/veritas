@@ -972,7 +972,7 @@ body { background:#F4F7FA!important; }
             <div class="csv-example" style="margin-top:18px;">
               <div class="header-row">Nama_Usaha,KBLI,Kecamatan,Status,Jenis_Dokumen,Penanggung_Jawab,Alamat,No_HP,Email,Kewenangan,Tingkat_Risiko</div>
               <div class="data-row">UD Timor Jaya,47111,Kota Soe,Terverifikasi,SPPL,Yohanes Benu,Jl. Diponegoro No.12,08123456789,ud@email.com,Kab/Kota,Rendah</div>
-              <div class="data-row">CV TTS Mandiri,38111,Mollo Selatan,Inventarisasi,UKL-UPL,Maria Lopes,Jl. Merdeka 5,08234567890,cv@email.com,Provinsi,Menengah</div>
+              <div class="data-row">CV TTS Mandiri,38111,Mollo Selatan,Belum Inventarisasi,UKL-UPL,Maria Lopes,Jl. Merdeka 5,08234567890,cv@email.com,Provinsi,Menengah</div>
             </div>
           </div>
           <div id="uploadTabManual" class="upload-panel">
@@ -1002,7 +1002,7 @@ body { background:#F4F7FA!important; }
                 <select id="m_risiko"><option value="">-- Pilih --</option><option>Rendah</option><option>Menengah Rendah</option><option>Menengah Tinggi</option><option>Tinggi</option></select>
               </div>
               <div class="form-group"><label>Status</label>
-                <select id="m_status"><option>Belum Inventarisasi</option><option>Inventarisasi</option><option>Terverifikasi</option><option>Ketidaksesuaian KBLI</option></select>
+                <select id="m_status"><option>Belum Inventarisasi</option><option>Terverifikasi</option><option>Ketidaksesuaian KBLI</option></select>
               </div>
               <div class="form-group"><label>Sumber Data</label>
                 <select id="m_sumber"><option>OSS</option><option>Amdalnet</option><option>Input Manual</option></select>
@@ -1035,7 +1035,6 @@ body { background:#F4F7FA!important; }
           <div class="ringkasan-grid" style="margin-bottom:16px;">
             <div class="ring-item"><div><div class="ring-label">NIB Terbit (Prioritas)</div><div class="ring-value" style="color:#1B3F72">0</div></div></div>
             <div class="ring-item"><div><div class="ring-label">Selesai / Verifikasi</div><div class="ring-value" style="color:var(--success);" id="inv-done">0</div></div></div>
-            <div class="ring-item"><div><div class="ring-label">Dalam Proses</div><div class="ring-value" style="color:var(--warning);" id="inv-proses">0</div></div></div>
             <div class="ring-item"><div><div class="ring-label">Belum Diverifikasi</div><div class="ring-value" style="color:var(--danger);" id="inv-belum">0</div></div></div>
           </div>
           <div class="panel-title"><i class="fa-solid fa-list"></i> Data per Kecamatan</div>
@@ -1202,13 +1201,12 @@ body { background:#F4F7FA!important; }
                 <thead><tr><th>Fitur</th><th>Pimpinan</th><th>Admin</th><th>Petugas</th></tr></thead>
                 <tbody>
                   <tr><td>Dashboard</td><td>✅</td><td>✅</td><td>✅</td></tr>
-                  <tr><td>Upload Data</td><td>—</td><td>✅</td><td>—</td></tr>
-                  <tr><td>Data Persetujuan</td><td>✅</td><td>✅</td><td>✅</td></tr>
                   <tr><td>Inventarisasi</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                  <tr><td>Upload Data</td><td>—</td><td>✅</td><td>—</td></tr>
                   <tr><td>Verifikasi Lapangan</td><td>—</td><td>✅</td><td>✅</td></tr>
-                  <tr><td>Temuan KBLI</td><td>✅</td><td>✅</td><td>—</td></tr>
-                  <tr><td>Laporan</td><td>✅</td><td>✅</td><td>—</td></tr>
-                  <tr><td>Pengaturan</td><td>—</td><td>✅</td><td>—</td></tr>
+                  <tr><td>Hasil Verifikasi</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                  <tr><td>Tentang &amp; SOP</td><td>✅</td><td>✅</td><td>✅</td></tr>
+                  <tr><td>Pengaturan (Manajemen Pengguna)</td><td>—</td><td>✅</td><td>—</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1267,8 +1265,8 @@ body { background:#F4F7FA!important; }
               <div style="font-size:13px;font-weight:700;color:var(--bb5);margin-bottom:4px;"><i class="fa-solid fa-download" style="margin-right:5px;"></i>Ekspor Semua Data</div>
               <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Unduh data inventarisasi dan verifikasi ke file CSV.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-sm" onclick="exportRegistryCSV()"><i class="fa-solid fa-file-csv"></i> Data Persetujuan</button>
-                <button class="btn btn-sm" onclick="exportVerifCSV()"><i class="fa-solid fa-file-csv"></i> Data Verifikasi</button>
+                <button class="btn btn-sm" onclick="exportRegistryCSV()"><i class="fa-solid fa-file-csv"></i> Data Inventarisasi</button>
+                <button class="btn btn-sm" onclick="exportVerifCSV()"><i class="fa-solid fa-file-csv"></i> Hasil Verifikasi</button>
               </div>
             </div>
             <div style="background:var(--warning-bg);border:1px solid #FFD591;border-radius:var(--r-sm);padding:16px;">
@@ -1940,12 +1938,11 @@ function renderInvTable() {
   const data = getPersetujuan();
   const container = document.getElementById('invKecList'); if (!container) return;
   const done    = data.filter(d => d.status === 'Terverifikasi').length;
-  const proses  = data.filter(d => d.status === 'Inventarisasi').length;
-  const belum   = data.filter(d => d.status === 'Belum Inventarisasi').length;
+  const gagal   = data.filter(d => d.status === 'Ketidaksesuaian KBLI').length;
+  const belum   = data.length - done - gagal;
   const nibOk   = data.filter(d => d.nib && String(d.nib).replace(/[^0-9]/g,'').length >= 8).length;
 
   const di = document.getElementById('inv-done');    if (di) di.textContent = done;
-  const dp = document.getElementById('inv-proses');  if (dp) dp.textContent = proses;
   const db = document.getElementById('inv-belum');   if (db) db.textContent = belum;
   const dt = document.querySelector('#page-inventarisasi .ring-value');
   if (dt) dt.textContent = nibOk;
