@@ -458,13 +458,14 @@ body { background:#F4F7FA!important; }
 .role-card i { font-size:14px!important; margin-bottom:3px!important; }
 .role-card span { font-size:10px!important; }
 .lc-input-wrap { border-radius:8px!important; padding:0 12px!important; margin-bottom:9px!important; }
-.lc-input-wrap input { font-size:13px!important; padding:9px 0!important; }
+.lc-input-wrap input { font-size:16px!important; padding:9px 0!important; }
 .lc-input-wrap i { font-size:13px!important; }
 .lc-btn { padding:11px!important; margin-top:2px!important; font-size:13px!important; border-radius:8px!important; }
 .lc-error { font-size:11px!important; padding:5px 9px!important; margin-top:6px!important; }
 .lc-version { font-size:9px!important; margin-top:9px!important; }
 #togglePasswordIcon { flex-shrink:0!important; opacity:.7!important; transition:opacity .15s!important; }
 #togglePasswordIcon:hover { opacity:1!important; }
+.role-card:focus-visible { outline:2px solid var(--bb)!important; outline-offset:2px!important; }
 </style>
 </head>
 </head>
@@ -501,14 +502,14 @@ body { background:#F4F7FA!important; }
     <div class="lc-divider"></div>
     <span class="lc-role-label">Masuk sebagai</span>
     <div class="role-cards">
-      <div class="role-card selected" onclick="selectRole('pimpinan',this)"><i class="fa-solid fa-crown"></i><span>Pimpinan</span></div>
-      <div class="role-card" onclick="selectRole('admin',this)"><i class="fa-solid fa-user-shield"></i><span>Admin</span></div>
-      <div class="role-card" onclick="selectRole('petugas',this)"><i class="fa-solid fa-user-tie"></i><span>Petugas</span></div>
+      <div class="role-card selected" tabindex="0" role="button" onclick="selectRole('pimpinan',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectRole('pimpinan',this);}"><i class="fa-solid fa-crown"></i><span>Pimpinan</span></div>
+      <div class="role-card" tabindex="0" role="button" onclick="selectRole('admin',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectRole('admin',this);}"><i class="fa-solid fa-user-shield"></i><span>Admin</span></div>
+      <div class="role-card" tabindex="0" role="button" onclick="selectRole('petugas',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectRole('petugas',this);}"><i class="fa-solid fa-user-tie"></i><span>Petugas</span></div>
     </div>
-    <div class="lc-input-wrap"><i class="fa-solid fa-user"></i><input id="username" type="text" placeholder="Username" autocomplete="off"></div>
+    <div class="lc-input-wrap"><i class="fa-solid fa-user"></i><input id="username" type="text" placeholder="Username" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('password').focus()"></div>
     <div class="lc-input-wrap"><i class="fa-solid fa-lock"></i><input id="password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"><i class="fa-solid fa-eye" id="togglePasswordIcon" onclick="togglePasswordVisibility()" style="cursor:pointer;"></i></div>
     <div id="loginError" class="lc-error"><i class="fa-solid fa-circle-exclamation"></i> Username atau password salah.</div>
-    <button class="lc-btn" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Masuk ke VERITAS</button>
+    <button class="lc-btn" id="btnLogin" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Masuk ke VERITAS</button>
     <div class="lc-version">VERITAS v3.0 · DLH TTS · 2025</div>
   </div>
 </div>
@@ -1188,12 +1189,16 @@ function togglePasswordVisibility() {
   icon.classList.toggle('fa-eye-slash', show);
 }
 async function doLogin() {
+  const btn = document.getElementById('btnLogin');
+  if (btn && btn.disabled) return; // cegah klik ganda
   const u = document.getElementById('username').value.trim().toLowerCase();
   const p = document.getElementById('password').value;
   const err = document.getElementById('loginError');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...'; }
   const users = getUsers();
   const inputHash = await sha256(p);
   const match = users.find(usr => usr.username.toLowerCase() === u && usr.role === selectedRole && (usr.password === inputHash || usr.password === p));
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk ke VERITAS'; }
   if (match) {
     if (match.password === p) { match.password = inputHash; setUsers(users); } // migrasi otomatis dari password polos lama
     err.style.display = 'none';
