@@ -463,6 +463,8 @@ body { background:#F4F7FA!important; }
 .lc-btn { padding:11px!important; margin-top:2px!important; font-size:13px!important; border-radius:8px!important; }
 .lc-error { font-size:11px!important; padding:5px 9px!important; margin-top:6px!important; }
 .lc-version { font-size:9px!important; margin-top:9px!important; }
+#togglePasswordIcon { flex-shrink:0!important; opacity:.7!important; transition:opacity .15s!important; }
+#togglePasswordIcon:hover { opacity:1!important; }
 </style>
 </head>
 </head>
@@ -504,7 +506,7 @@ body { background:#F4F7FA!important; }
       <div class="role-card" onclick="selectRole('petugas',this)"><i class="fa-solid fa-user-tie"></i><span>Petugas</span></div>
     </div>
     <div class="lc-input-wrap"><i class="fa-solid fa-user"></i><input id="username" type="text" placeholder="Username" autocomplete="off"></div>
-    <div class="lc-input-wrap"><i class="fa-solid fa-lock"></i><input id="password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lc-input-wrap"><i class="fa-solid fa-lock"></i><input id="password" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"><i class="fa-solid fa-eye" id="togglePasswordIcon" onclick="togglePasswordVisibility()" style="cursor:pointer;"></i></div>
     <div id="loginError" class="lc-error"><i class="fa-solid fa-circle-exclamation"></i> Username atau password salah.</div>
     <button class="lc-btn" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Masuk ke VERITAS</button>
     <div class="lc-version">VERITAS v3.0 · DLH TTS · 2025</div>
@@ -986,8 +988,8 @@ const ROLES = {
 const MAX_PETUGAS = 20; // batas maksimal akun Petugas yang bisa didaftarkan
 const MENU_DEF = [
   { id:'dashboard',     label:'Dashboard',           icon:'fa-house',               grp:'Menu Utama' },
-  { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Menu Utama' },
-  { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Lapangan' },
+  { id:'upload',        label:'Upload Data',          icon:'fa-upload',              grp:'Menu Utama' },
+  { id:'inventarisasi', label:'Inventarisasi',        icon:'fa-map-location-dot',    grp:'Lapangan' },
   { id:'verifikasi',    label:'Verifikasi Lapangan',  icon:'fa-camera',              grp:'Lapangan' },
   { id:'persetujuan',   label:'Hasil Verifikasi',     icon:'fa-clipboard-check',     grp:'Lapangan' },
   { id:'tentang',       label:'Tentang & SOP',        icon:'fa-circle-info',         grp:'Sistem' },
@@ -1176,6 +1178,15 @@ function selectRole(role, el) {
   el.classList.add('selected');
 }
 let currentUser = null;
+function togglePasswordVisibility() {
+  const inp = document.getElementById('password');
+  const icon = document.getElementById('togglePasswordIcon');
+  if (!inp || !icon) return;
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  icon.classList.toggle('fa-eye', !show);
+  icon.classList.toggle('fa-eye-slash', show);
+}
 async function doLogin() {
   const u = document.getElementById('username').value.trim().toLowerCase();
   const p = document.getElementById('password').value;
